@@ -1,0 +1,222 @@
+<div class="page-container">
+  <div class="page-section">
+
+    <app-page-header title="Compare Players" subtitle="Side-by-side player comparison" backLink="/players" backLabel="Players" />
+
+    <!-- Search Controls -->
+    <div class="compare-controls card">
+      <div class="search-pair">
+        <!-- Player 1 -->
+        <div class="player-search-wrap">
+          <p class="form-label">Player 1</p>
+          <div class="dropdown-wrap">
+            <input
+              class="form-input"
+              type="text"
+              placeholder="Search player…"
+              [value]="p1.term"
+              (input)="onSearch1($any($event.target).value)"
+              [disabled]="!!p1.selected"
+            />
+            @if (p1.loading) {
+              <div class="dropdown-hint">Searching…</div>
+            } @else if (p1.results.length > 0) {
+              <div class="dropdown">
+                @for (player of p1.results; track player.id) {
+                  <button class="dropdown-item" (click)="selectPlayer(p1, player)">
+                    <img [src]="player.photo" [alt]="player.name" class="player-photo-xs" (error)="onImgError($event)" />
+                    <span>{{ player.displayName || player.name }}</span>
+                    <span class="text-muted text-sm">{{ player.nationality?.name }}</span>
+                  </button>
+                }
+              </div>
+            } @else if (p1.term && !p1.loading) {
+              <div class="dropdown-hint">No players found for "{{ p1.term }}"</div>
+            }
+          </div>
+          @if (p1.selected) {
+            <div class="selected-player">
+              <img [src]="p1.selected.photo" [alt]="p1.selected.name" class="player-photo-sm" (error)="onImgError($event)" />
+              <span class="font-medium">{{ p1.selected.displayName || p1.selected.name }}</span>
+              <button class="btn btn-ghost btn-sm" (click)="clearPlayer(p1)">×</button>
+            </div>
+          }
+        </div>
+
+        <div class="vs-divider">VS</div>
+
+        <!-- Player 2 -->
+        <div class="player-search-wrap">
+          <p class="form-label">Player 2</p>
+          <div class="dropdown-wrap">
+            <input
+              class="form-input"
+              type="text"
+              placeholder="Search player…"
+              [value]="p2.term"
+              (input)="onSearch2($any($event.target).value)"
+              [disabled]="!!p2.selected"
+            />
+            @if (p2.loading) {
+              <div class="dropdown-hint">Searching…</div>
+            } @else if (p2.results.length > 0) {
+              <div class="dropdown">
+                @for (player of p2.results; track player.id) {
+                  <button class="dropdown-item" (click)="selectPlayer(p2, player)">
+                    <img [src]="player.photo" [alt]="player.name" class="player-photo-xs" (error)="onImgError($event)" />
+                    <span>{{ player.displayName || player.name }}</span>
+                    <span class="text-muted text-sm">{{ player.nationality?.name }}</span>
+                  </button>
+                }
+              </div>
+            } @else if (p2.term && !p2.loading) {
+              <div class="dropdown-hint">No players found for "{{ p2.term }}"</div>
+            }
+          </div>
+          @if (p2.selected) {
+            <div class="selected-player">
+              <img [src]="p2.selected.photo" [alt]="p2.selected.name" class="player-photo-sm" (error)="onImgError($event)" />
+              <span class="font-medium">{{ p2.selected.displayName || p2.selected.name }}</span>
+              <button class="btn btn-ghost btn-sm" (click)="clearPlayer(p2)">×</button>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="compare-actions">
+        <button class="btn btn-primary" [disabled]="!canCompare() || comparing()" (click)="compare()">
+          @if (comparing()) { Comparing… } @else { Compare }
+        </button>
+      </div>
+    </div>
+
+    @if (compareError()) {
+      <app-error-state [message]="compareError()" />
+    }
+
+    <!-- Comparison Result -->
+    @if (comparison(); as c) {
+      <div class="comparison-result">
+
+        <!-- Player headers -->
+        <div class="player-headers">
+          <div class="player-header-card card">
+            @if (c.player1.photo) {
+              <img [src]="c.player1.photo" [alt]="c.player1.name" class="compare-photo" (error)="onImgError($event)" />
+            }
+            <div class="player-header-info">
+              <p class="compare-player-name">{{ c.player1.displayName || c.player1.name }}</p>
+              @if (c.player1.position?.name) {
+                <span class="badge badge-blue">{{ c.player1.position!.name }}</span>
+              }
+              <div class="compare-player-meta">
+                @if (c.player1.nationality?.name) { <span>{{ c.player1.nationality!.name }}</span> }
+                @if (c.player1.dateOfBirth) { <span>Age {{ calcAge(c.player1.dateOfBirth) }}</span> }
+                @if (c.player1.height) { <span>{{ c.player1.height }} cm</span> }
+              </div>
+            </div>
+          </div>
+
+          <div class="compare-vs">VS</div>
+
+          <div class="player-header-card card player-header-right">
+            @if (c.player2.photo) {
+              <img [src]="c.player2.photo" [alt]="c.player2.name" class="compare-photo" (error)="onImgError($event)" />
+            }
+            <div class="player-header-info player-header-info-right">
+              <p class="compare-player-name">{{ c.player2.displayName || c.player2.name }}</p>
+              @if (c.player2.position?.name) {
+                <span class="badge badge-blue">{{ c.player2.position!.name }}</span>
+              }
+              <div class="compare-player-meta">
+                @if (c.player2.nationality?.name) { <span>{{ c.player2.nationality!.name }}</span> }
+                @if (c.player2.dateOfBirth) { <span>Age {{ calcAge(c.player2.dateOfBirth) }}</span> }
+                @if (c.player2.height) { <span>{{ c.player2.height }} cm</span> }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Radar Chart -->
+        @if (compareRadarData()) {
+          <div class="compare-radar card">
+            <p class="section-label" style="margin-bottom: var(--space-4)">Performance Radar</p>
+            <app-radar-chart [labels]="compareRadarData()!.labels" [datasets]="compareRadarData()!.datasets" />
+          </div>
+        }
+
+        <!-- Stats comparison table -->
+        @if (buildStatRows(c).length > 0) {
+          <div class="stats-compare-section">
+            <p class="section-label" style="margin-bottom:var(--space-3)">Season Statistics · {{ c.season }}</p>
+            <div class="stats-compare-table card">
+              <!-- Table header -->
+              <div class="stat-table-header">
+                <span class="stat-header-name"><span class="player-color-dot dot-p1"></span>{{ c.player1.displayName || c.player1.name }}</span>
+                <span class="stat-header-center">Stat</span>
+                <span class="stat-header-name stat-header-right">{{ c.player2.displayName || c.player2.name }}<span class="player-color-dot dot-p2"></span></span>
+              </div>
+              @for (row of buildStatRows(c); track row.name) {
+                <div class="stat-compare-row">
+                  <!-- P1 side -->
+                  <div class="stat-side stat-side-left">
+                    <div class="stat-val-wrap">
+                      <span class="stat-val stat-val-p1" [class.stat-winner]="row.winner === 'p1'">{{ row.val1 }}</span>
+                      @if (row.winner === 'p1') { <span class="win-badge win-badge-p1">▲</span> }
+                    </div>
+                    <div class="stat-bar-track">
+                      <div class="stat-bar-p1" [style.width.%]="row.pct1"></div>
+                    </div>
+                  </div>
+                  <!-- Stat name -->
+                  <span class="stat-name-center">{{ row.name }}</span>
+                  <!-- P2 side -->
+                  <div class="stat-side stat-side-right">
+                    <div class="stat-bar-track stat-bar-track-right">
+                      <div class="stat-bar-p2" [style.width.%]="row.pct2"></div>
+                    </div>
+                    <div class="stat-val-wrap stat-val-wrap-right">
+                      @if (row.winner === 'p2') { <span class="win-badge win-badge-p2">▲</span> }
+                      <span class="stat-val stat-val-p2" [class.stat-winner]="row.winner === 'p2'">{{ row.val2 }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        } @else {
+          <div class="card" style="text-align:center;color:var(--color-text-muted);padding:var(--space-6)">
+            No season statistics available for comparison.
+          </div>
+        }
+
+      </div>
+    }
+
+    <!-- History -->
+    @if (authService.isAuthenticated() && history().length > 0) {
+      <div class="history-section">
+        <p class="section-label" style="margin-bottom: var(--space-3);">Recent Comparisons</p>
+        <div class="history-list">
+          @for (h of history(); track h.id) {
+            <button class="history-item" (click)="replayHistory(h)" [disabled]="comparing()">
+              <div class="history-players">
+                <span class="history-player-name">{{ h.player1Name }}</span>
+                <span class="history-vs">VS</span>
+                <span class="history-player-name">{{ h.player2Name }}</span>
+              </div>
+              <div class="history-meta">
+                <span class="history-date">{{ formatDate(h.createdAt) }}</span>
+                <svg class="history-replay-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+                  <path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+                </svg>
+              </div>
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+  </div>
+</div>

@@ -1,0 +1,114 @@
+<div class="page-container">
+  <div class="page-section">
+
+    <app-page-header title="Players" subtitle="Search and scout football players">
+      <a routerLink="/players/compare" class="btn btn-secondary btn-sm">Compare Players</a>
+    </app-page-header>
+
+    <app-player-filter-toolbar
+      (filtersChange)="onFiltersChange($event)"
+      (searchSubmit)="onSearchSubmit($event)"
+      (playerSelected)="onPlayerSelected($event)"
+    />
+
+    @if (loading()) {
+      <app-loading [full]="true" label="Searching players" />
+    } @else if (error()) {
+      <app-error-state [message]="error()" (retry)="onSearchSubmit(activeSearch)" />
+    } @else if (!searched()) {
+
+      <!-- Top Players Section -->
+      @if (topLoading()) {
+        <app-loading label="Loading top scorers" />
+      } @else if (topPlayers().length > 0) {
+        <div class="top-section">
+          <div class="top-section-header">
+            <div class="top-section-title-wrap">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="top-icon"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <h2 class="top-section-title">Top Scorers</h2>
+            </div>
+            <span class="top-section-sub">Season leaders · Click to view profile</span>
+          </div>
+          <div class="top-players-grid">
+            @for (p of topPlayers(); track p.id; let i = $index) {
+              <a [routerLink]="['/players', p.id]" class="top-player-card card card-hover">
+                <div class="top-rank" [class.rank-gold]="i === 0" [class.rank-silver]="i === 1" [class.rank-bronze]="i === 2">{{ i + 1 }}</div>
+                <div class="top-photo-wrap">
+                  @if (p.photo) {
+                    <img [src]="p.photo" [alt]="p.name" class="top-photo" (error)="onImgError($event)" />
+                  } @else {
+                    <div class="top-photo-fallback">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    </div>
+                  }
+                </div>
+                <div class="top-info">
+                  <p class="top-name">{{ p.displayName || p.name }}</p>
+                  <p class="top-meta">
+                    @if (p.position?.name) { {{ p.position!.name }} }
+                    @if (p.position?.name && p.nationality?.name) { · }
+                    {{ p.nationality?.name }}
+                  </p>
+                </div>
+                @if (p.goals !== null && p.goals !== undefined) {
+                  <div class="top-goals">
+                    <span class="top-goals-val">{{ p.goals }}</span>
+                    <span class="top-goals-label">goals</span>
+                  </div>
+                }
+              </a>
+            }
+          </div>
+        </div>
+      }
+
+    } @else if (players().length === 0) {
+      <app-empty-state title="No players found" message="Try a different name." />
+    } @else {
+      <div class="results-header">
+        <p class="results-label">
+          @if (activeSearch) { Results for <strong>"{{ activeSearch }}"</strong> }
+          @if (meta().total > 0) { <span class="results-count">{{ meta().total }} players</span> }
+        </p>
+      </div>
+      <div class="players-grid">
+        @for (p of players(); track p.id) {
+          <a [routerLink]="['/players', p.id]" class="player-card card card-hover">
+            <div class="player-photo-wrap">
+              @if (p.photo) {
+                <img [src]="p.photo" [alt]="p.name" class="player-photo" (error)="onImgError($event)" />
+              } @else {
+                <div class="player-photo-fallback">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </div>
+              }
+            </div>
+            <div class="player-info">
+              <p class="player-name">{{ p.displayName || p.name }}</p>
+              @if (p.position?.name) {
+                <p class="player-position text-sm text-muted">{{ p.position!.name }}</p>
+              }
+              <div class="player-meta">
+                <span class="text-sm text-muted">{{ p.nationality?.name }}</span>
+                @if (calcAge(p.dateOfBirth)) {
+                  <span class="text-sm text-muted">· {{ calcAge(p.dateOfBirth) }} yrs</span>
+                }
+              </div>
+            </div>
+          </a>
+        }
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <button class="btn btn-secondary btn-sm" [disabled]="page() <= 1" (click)="prevPage()">← Previous</button>
+        <span class="page-info text-muted text-sm">
+          Page {{ page() }}@if (meta().total > 0) { of {{ Math.ceil(meta().total / meta().limit) }} }
+        </span>
+        <button class="btn btn-secondary btn-sm" [disabled]="!hasNextPage()" (click)="nextPage()">Next →</button>
+      </div>
+    }
+
+  </div>
+</div>
+

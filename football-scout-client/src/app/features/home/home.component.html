@@ -1,0 +1,364 @@
+<div class="home-page">
+
+  <!-- ══ HERO — DO NOT TOUCH ══ -->
+  <section class="hero-section" aria-label="Welcome to Scout Hub">
+    <div class="hero-ambient" aria-hidden="true"></div>
+    <div class="hero-shapes" aria-hidden="true">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+      <div class="shape shape-4"></div>
+      <div class="shape shape-5"></div>
+    </div>
+    <div class="hero-grid" aria-hidden="true"></div>
+    <div class="hero-vignette" aria-hidden="true"></div>
+    <div class="hero-body">
+      <div class="hero-badge">
+        <span class="hero-badge-dot" aria-hidden="true"></span>
+        <span>Professional Football Intelligence</span>
+      </div>
+      <h1 class="hero-title">
+        <span class="hero-title-line1">Know The Game.</span>
+        <span class="hero-title-line2">Scout Hub.</span>
+      </h1>
+      <p class="hero-subtitle">
+        Real-time match data, transfer intelligence, and deep player analytics —
+        everything a modern scout needs in one dashboard.
+      </p>
+      @if (!authService.isAuthenticated()) {
+        <div class="hero-ctas">
+          <a routerLink="/register" class="btn hero-btn-primary">
+            Start Scouting Free
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a routerLink="/livescores" class="btn hero-btn-ghost">
+            <span class="hero-live-dot" aria-hidden="true"></span>
+            View Live Now
+          </a>
+        </div>
+      } @else {
+        <p class="hero-welcome">
+          Welcome back, <strong>{{ authService.currentUser()?.name }}</strong>
+        </p>
+      }
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="hero-stat-value">500k+</span>
+          <span class="hero-stat-label">Players</span>
+        </div>
+        <div class="hero-stat-divider" aria-hidden="true"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-value">200+</span>
+          <span class="hero-stat-label">Leagues</span>
+        </div>
+        <div class="hero-stat-divider" aria-hidden="true"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-value">Live</span>
+          <span class="hero-stat-label">Scores</span>
+        </div>
+        <div class="hero-stat-divider" aria-hidden="true"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-value">Notes</span>
+          <span class="hero-stat-label">Scouting</span>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- ══ END HERO ══ -->
+
+
+  <!-- ══ SECTION 1: LIVE MATCHES ══ -->
+  @if (liveMatches().length > 0) {
+    <section class="home-section page-container">
+      <div class="section-hd">
+        <div class="section-hd-left">
+          <span class="live-pip" aria-hidden="true"></span>
+          <h2 class="section-hd-title">LIVE MATCHES</h2>
+          <span class="live-count-badge">{{ liveMatches().length }}</span>
+        </div>
+        <a routerLink="/livescores" class="section-hd-link">VIEW ALL MATCHES &rarr;</a>
+      </div>
+
+      <div class="live-grid">
+        @for (m of liveMatches(); track m.id) {
+          <a [routerLink]="['/fixtures', m.id]" class="lm-card">
+            <div class="lm-top">
+              <span class="lm-league">{{ m.leagueName || 'Live' }}</span>
+              <span class="lm-live-badge">
+                <span class="lm-live-dot"></span>
+                {{ m.minute ? m.minute + "'" : 'LIVE' }}
+              </span>
+            </div>
+            <div class="lm-body">
+              <div class="lm-team">
+                <img [src]="m.teams.home.logo" [alt]="m.teams.home.name" class="lm-logo" (error)="onImgError($event)" />
+                <span class="lm-team-name">{{ m.teams.home.name }}</span>
+              </div>
+              <div class="lm-score-wrap">
+                <span class="lm-score">{{ m.score.home }} <span class="lm-score-sep">–</span> {{ m.score.away }}</span>
+              </div>
+              <div class="lm-team lm-team-away">
+                <img [src]="m.teams.away.logo" [alt]="m.teams.away.name" class="lm-logo" (error)="onImgError($event)" />
+                <span class="lm-team-name">{{ m.teams.away.name }}</span>
+              </div>
+            </div>
+          </a>
+        }
+      </div>
+    </section>
+  }
+
+
+  <!-- ══ SECTION 2+3: MAIN CONTENT GRID ══ -->
+  <section class="home-section page-container">
+    <div class="main-content-grid">
+
+      <!-- ── LEFT COLUMN: top widgets + command center ── -->
+      <div class="main-left">
+
+        <!-- Top widgets row: Tracked Prospects + Compare Analysis -->
+        <div class="widgets-top">
+
+          <!-- Widget 1: Tracked Prospects -->
+          <div class="widget">
+            <div class="widget-hd">
+              <span class="widget-hd-title">TRACKED PROSPECTS</span>
+              <a routerLink="/favorites" class="widget-hd-link">VIEW ALL &rarr;</a>
+            </div>
+
+            @if (authService.isAuthenticated()) {
+              @if (favoritePlayers().length > 0) {
+                <!-- prospects table header — only when stats exist -->
+                @if (hasProspectStats()) {
+                  <div class="prospects-header">
+                    <span class="ph-player">PLAYER</span>
+                    <span class="ph-stat">POS</span>
+                    <span class="ph-stat">GLS</span>
+                    <span class="ph-stat">RTG</span>
+                  </div>
+                }
+                <div class="prospects-list">
+                  @for (p of favoritePlayers().slice(0, 5); track p.id) {
+                    <a [routerLink]="['/players', p.apiPlayerId]" class="prospect-row">
+                      <div class="prospect-avatar">
+                        @if (p.photo) {
+                          <img [src]="p.photo" [alt]="p.playerName" class="prospect-photo" (error)="onImgError($event)" />
+                        } @else {
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        }
+                      </div>
+                      <div class="prospect-info">
+                        <span class="prospect-name">{{ p.displayName || p.playerName }}</span>
+                        <span class="prospect-team">{{ p.teamName || '' }}</span>
+                      </div>
+                      @if (hasProspectStats()) {
+                        <span class="prospect-stat">{{ p.position ?? '' }}</span>
+                        <span class="prospect-stat">{{ p.goals ?? '' }}</span>
+                        <span class="prospect-stat" [class.prospect-stat--highlight]="p.rating != null">{{ p.rating != null ? (+p.rating).toFixed(1) : '' }}</span>
+                      }
+                    </a>
+                  }
+                </div>
+              } @else {
+                <div class="widget-empty">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M11 8v6M8 11h6"/></svg>
+                  <p>No tracked players yet</p>
+                  <a routerLink="/players" class="widget-empty-link">Search Players &rarr;</a>
+                </div>
+              }
+            } @else {
+              <div class="widget-empty">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <p>Sign in to track prospects</p>
+                <a routerLink="/login" class="widget-empty-link">Sign In &rarr;</a>
+              </div>
+            }
+          </div>
+
+          <!-- Widget 2: Compare Analysis -->
+          <div class="widget widget-compare">
+            <div class="widget-hd">
+              <span class="widget-hd-title">COMPARE ANALYSIS</span>
+            </div>
+            <div class="compare-body">
+              <div class="compare-vs-row">
+                @if (compareSlots(); as slots) {
+                  <div class="compare-avatar-col">
+                    <div class="compare-avatar">
+                      @if (slots.p1Photo) {
+                        <img [src]="slots.p1Photo" [alt]="slots.p1Name" class="compare-avatar-img" (error)="onImgError($event)" />
+                      } @else {
+                        <span class="compare-initials">{{ slots.p1Name | slice:0:2 | uppercase }}</span>
+                      }
+                    </div>
+                    <span class="compare-slot-name">{{ slots.p1Name }}</span>
+                  </div>
+                  <span class="compare-vs-badge">VS</span>
+                  <div class="compare-avatar-col">
+                    <div class="compare-avatar">
+                      @if (slots.p2Photo) {
+                        <img [src]="slots.p2Photo" [alt]="slots.p2Name" class="compare-avatar-img" (error)="onImgError($event)" />
+                      } @else {
+                        <span class="compare-initials">{{ slots.p2Name | slice:0:2 | uppercase }}</span>
+                      }
+                    </div>
+                    <span class="compare-slot-name">{{ slots.p2Name }}</span>
+                  </div>
+                } @else {
+                  <div class="compare-avatar-col">
+                    <div class="compare-avatar compare-avatar--empty">
+                      <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    </div>
+                  </div>
+                  <span class="compare-vs-badge">VS</span>
+                  <div class="compare-avatar-col">
+                    <div class="compare-avatar compare-avatar--empty">
+                      <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    </div>
+                  </div>
+                }
+              </div>
+              <p class="compare-desc">Overlay heatmaps and technical KPIs</p>
+              <a routerLink="/players/compare" class="compare-launch-btn">LAUNCH TOOL</a>
+            </div>
+          </div>
+
+        </div><!-- end .widgets-top -->
+
+        <!-- Command Center -->
+        <div class="cmd-section-hd">
+          <h2 class="section-hd-title">COMMAND CENTER</h2>
+        </div>
+        <div class="command-grid" [@listStagger]="quickLinks.length">
+          @for (link of quickLinks; track link.route) {
+            <a [routerLink]="link.route" class="cmd-card">
+              <div class="cmd-icon" [class]="'cmd-icon--' + link.icon">
+                @switch (link.icon) {
+                  @case ('trophy') {
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>
+                  }
+                  @case ('shield') {
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                  }
+                  @case ('person') {
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                  }
+                  @case ('calendar') {
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+                  }
+                  @case ('transfer') {
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+                  }
+                  @case ('games') {
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5S14.67 12 15.5 12s1.5.67 1.5 1.5S16.33 15 15.5 15zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5S19.33 12 18.5 12z"/></svg>
+                  }
+                }
+              </div>
+              <div class="cmd-body">
+                <span class="cmd-label">{{ link.label }}</span>
+              </div>
+            </a>
+          }
+        </div>
+
+      </div><!-- end .main-left -->
+
+      <!-- ── RIGHT COLUMN: Global Watchlist ── -->
+      <div class="widget widget-watchlist">
+        <div class="widget-hd">
+          <span class="widget-hd-title">GLOBAL WATCHLIST</span>
+          <a routerLink="/leagues" class="widget-hd-link">MANAGE &rarr;</a>
+        </div>
+        <div class="watchlist-list">
+          @for (league of featuredLeagues(); track league.id) {
+            <a [routerLink]="['/leagues', league.id]" class="watchlist-row">
+              <div class="watchlist-logo">
+                @if (league.logo) {
+                  <img [src]="league.logo" [alt]="league.name" class="watchlist-logo-img" (error)="onImgError($event)" />
+                } @else {
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2z"/></svg>
+                }
+              </div>
+              <div class="watchlist-info">
+                <span class="watchlist-name">{{ league.name }}</span>
+                <span class="watchlist-meta">
+                  {{ leagueScope(league) }}
+                  @if (league.currentSeason?.teamsCount) {
+                    <span class="watchlist-meta-sep">•</span> {{ league.currentSeason!.teamsCount }} TEAMS
+                  }
+                </span>
+              </div>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="watchlist-arrow"><path d="M8 5v14l11-7z"/></svg>
+            </a>
+          }
+        </div>
+      </div>
+
+    </div><!-- end .main-content-grid -->
+  </section>
+
+
+  <!-- ══ SECTION 4: BOTTOM 3 WIDGETS ══ -->
+  <section class="home-section page-container home-bottom-row">
+
+    <!-- Market Cap Trend -->
+    <div class="bottom-widget">
+      <p class="bottom-widget-label">MARKET CAP TREND</p>
+      <div class="mcap-bars">
+        <span class="mcap-bar" style="height:38%"></span>
+        <span class="mcap-bar" style="height:52%"></span>
+        <span class="mcap-bar" style="height:45%"></span>
+        <span class="mcap-bar" style="height:61%"></span>
+        <span class="mcap-bar" style="height:55%"></span>
+        <span class="mcap-bar mcap-bar--active" style="height:78%"></span>
+        <span class="mcap-bar mcap-bar--active" style="height:100%"></span>
+      </div>
+      <div class="mcap-footer">
+        <span class="mcap-value">€4.2B</span>
+        <span class="mcap-change">+12.4%</span>
+      </div>
+      <p class="mcap-sub">COMBINED VALUE OF TRACKED U23 TALENT</p>
+    </div>
+
+    <!-- Scouting Efficiency -->
+    <div class="bottom-widget bottom-widget--center">
+      <p class="bottom-widget-label">SCOUTING EFFICIENCY</p>
+      <div class="donut-wrap">
+        <svg viewBox="0 0 80 80" class="donut-svg" aria-hidden="true">
+          <circle cx="40" cy="40" r="30" fill="none" stroke="var(--color-surface-3)" stroke-width="8"/>
+          <circle cx="40" cy="40" r="30" fill="none" stroke="var(--color-accent)" stroke-width="8"
+            stroke-dasharray="188.5" stroke-dashoffset="28.3"
+            stroke-linecap="round" transform="rotate(-90 40 40)"/>
+          <text x="40" y="44" text-anchor="middle" class="donut-pct">85%</text>
+        </svg>
+      </div>
+      <p class="donut-title">DATA COVERAGE</p>
+      <p class="donut-sub">Tier 1 &amp; 2 global leagues synced</p>
+    </div>
+
+    <!-- Stats Counters -->
+    <div class="bottom-widget">
+      <p class="bottom-widget-label">INTELLIGENCE FEED</p>
+      <div class="stats-list">
+        <div class="stats-row">
+          <span class="stats-row-label">TOTAL REPORTS</span>
+          <span class="stats-row-value">1,482</span>
+        </div>
+        <div class="stats-row">
+          <span class="stats-row-label">ACTIVE ALERTS</span>
+          <span class="stats-row-value stats-row-value--danger">24</span>
+        </div>
+        <div class="stats-row">
+          <span class="stats-row-label">PENDING REVIEWS</span>
+          <span class="stats-row-value">08</span>
+        </div>
+      </div>
+      <button class="stats-export-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        EXPORT DASHBOARD (PDF)
+      </button>
+    </div>
+
+  </section>
+
+</div>

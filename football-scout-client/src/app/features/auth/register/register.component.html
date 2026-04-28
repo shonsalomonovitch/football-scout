@@ -1,0 +1,163 @@
+<div class="auth-layout">
+
+  <!-- ══ LEFT: Brand Panel ══ -->
+  <div class="auth-left">
+    <div class="hex hex-1"></div>
+    <div class="hex hex-2"></div>
+
+    <div class="auth-left-content">
+
+      <div class="auth-logo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#22c55e">
+          <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+        </svg>
+        <span class="auth-logo-text">SCOUT HUB</span>
+      </div>
+
+      <div class="auth-hero">
+        <h1 class="auth-headline">
+          <span class="auth-headline-white">SCOUT </span><span class="auth-headline-green">HUB</span>
+        </h1>
+        <p class="auth-tagline">KNOW THE GAME.</p>
+      </div>
+
+      <ul class="auth-bullets">
+        <li><span class="auth-dot"></span>500K+ Players</li>
+        <li><span class="auth-dot"></span>Live Match Data</li>
+        <li><span class="auth-dot"></span>Transfer Intelligence</li>
+      </ul>
+
+    </div>
+  </div>
+
+  <!-- ══ RIGHT: Form Panel ══ -->
+  <div class="auth-right">
+    <div class="auth-right-inner">
+
+      <h2 class="auth-title">Create your account</h2>
+      <p class="auth-sub">Join Scout Hub free and start scouting today.</p>
+
+      <!-- Card / Frame -->
+      <div class="auth-card">
+
+        @if (error()) {
+          <div class="auth-error">{{ error() }}</div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+          <!-- Full Name -->
+          <div class="auth-field">
+            <label class="auth-field-label" for="name">FULL NAME</label>
+            <input
+              id="name"
+              type="text"
+              class="auth-input"
+              [class.auth-input--error]="form.get('name')?.invalid && form.get('name')?.touched"
+              formControlName="name"
+              placeholder="Enter your name"
+              autocomplete="name"
+            />
+            @if (nameError()) {
+              <span class="auth-field-error">{{ nameError() }}</span>
+            }
+          </div>
+
+          <!-- Email -->
+          <div class="auth-field">
+            <label class="auth-field-label" for="email">EMAIL ADDRESS</label>
+            <input
+              id="email"
+              type="email"
+              class="auth-input"
+              [class.auth-input--error]="form.get('email')?.invalid && form.get('email')?.touched"
+              formControlName="email"
+              placeholder="name@scouthub.com"
+              autocomplete="email"
+            />
+            @if (form.get('email')?.invalid && form.get('email')?.touched) {
+              <span class="auth-field-error">Enter a valid email address</span>
+            }
+          </div>
+
+          <!-- Password -->
+          <div class="auth-field">
+            <label class="auth-field-label" for="password">PASSWORD</label>
+            <div class="auth-input-wrap">
+              <input
+                id="password"
+                [type]="showPass() ? 'text' : 'password'"
+                class="auth-input auth-input--pad-right"
+                [class.auth-input--error]="form.get('password')?.invalid && form.get('password')?.touched"
+                formControlName="password"
+                placeholder="••••••••"
+                autocomplete="new-password"
+              />
+              <button type="button" class="auth-eye-btn" (click)="showPass.set(!showPass())" tabindex="-1">
+                @if (showPass()) {
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
+                    <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                } @else {
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                }
+              </button>
+            </div>
+
+            <!-- Password strength meter -->
+            @if (form.get('password')?.value) {
+              <div class="pwd-strength">
+                <div class="pwd-strength-bars">
+                  <span class="pwd-bar" [class.pwd-bar--1]="passwordStrength.level >= 1" [class.pwd-bar--2]="passwordStrength.level >= 2" [class.pwd-bar--3]="passwordStrength.level >= 3"></span>
+                  <span class="pwd-bar" [class.pwd-bar--2]="passwordStrength.level >= 2" [class.pwd-bar--3]="passwordStrength.level >= 3"></span>
+                  <span class="pwd-bar" [class.pwd-bar--3]="passwordStrength.level >= 3"></span>
+                </div>
+                @if (passwordStrength.label) {
+                  <span class="pwd-label" [class]="'pwd-label--' + passwordStrength.level">
+                    {{ passwordStrength.label }}
+                  </span>
+                }
+              </div>
+              <p class="pwd-hint">Use 8+ chars, uppercase, numbers &amp; symbols for a strong password.</p>
+            }
+
+            @if (form.get('password')?.invalid && form.get('password')?.touched) {
+              <span class="auth-field-error">Password must be at least 6 characters</span>
+            }
+          </div>
+
+          <button type="submit" class="auth-submit-btn" [disabled]="loading()">
+            {{ loading() ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT' }}
+          </button>
+
+        </form>
+
+      </div>
+      <!-- /auth-card -->
+
+      <p class="auth-footer">
+        Already have an account?
+        <a routerLink="/login" class="auth-footer-link">Sign In &rarr;</a>
+      </p>
+
+      <p class="auth-legal">
+        By creating an account you agree to our
+        <span class="auth-legal-link">Terms of Service</span> and
+        <span class="auth-legal-link">Privacy Policy</span>.
+      </p>
+
+    </div>
+
+    <div class="auth-page-footer">
+      <span class="auth-page-footer-link">Privacy Policy</span>
+      <span class="auth-page-footer-link">Terms of Service</span>
+      <span class="auth-page-footer-link">Help Center</span>
+    </div>
+  </div>
+
+</div>

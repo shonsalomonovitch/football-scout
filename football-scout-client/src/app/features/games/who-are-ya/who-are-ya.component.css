@@ -1,0 +1,355 @@
+/* ── Page wrapper ── */
+.way-page {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-4) var(--space-10);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── White card (photo + search) ── */
+.way-card {
+  background: #ffffff;
+  border-radius: 16px 16px 0 0;
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  position: relative;
+}
+
+.way-toprow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: var(--space-1);
+}
+.way-back {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  font-size: var(--text-sm); color: #6b7280; text-decoration: none;
+  transition: color .15s;
+}
+.way-back:hover { color: #111; }
+
+.way-mode-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.way-card-loading {
+  padding: var(--space-10) 0;
+  color: #9ca3af;
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+/* Position hint */
+.way-pos-hint {
+  font-size: var(--text-2xl);
+  font-weight: 900;
+  color: #111827;
+  letter-spacing: .04em;
+  text-align: center;
+}
+
+/* Photo */
+.way-photo-area {
+  position: relative;
+  width: 220px;
+  height: 260px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f3f4f6;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+.way-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 10%;
+  transition: filter 0.5s ease;
+  display: block;
+}
+.way-photo-fallback {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%; background: #f3f4f6;
+}
+.way-photo-overlay {
+  position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+  padding: 4px 16px; border-radius: 99px;
+  font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+}
+.way-overlay-won  { background: rgba(34,197,94,.9);  color: #fff; }
+.way-overlay-lost { background: rgba(239,68,68,.9);  color: #fff; }
+
+/* Reveal strip */
+.way-reveal { text-align: center; display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
+.way-reveal-title { font-size: var(--text-base); font-weight: 700; color: #111; }
+.way-reveal-won .way-reveal-title { color: #15803d; }
+.way-next-btn {
+  padding: 8px 20px;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s;
+}
+.way-next-btn:hover { background: #2563eb; }
+
+/* Confirmed hints strip */
+.way-confirmed-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  width: 100%;
+}
+.confirmed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px 4px 6px;
+  background: #dcfce7;
+  border: 1.5px solid #86efac;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #15803d;
+}
+.conf-flag {
+  width: 18px; height: 13px;
+  object-fit: cover; border-radius: 2px; flex-shrink: 0;
+}
+.conf-logo {
+  width: 18px; height: 18px;
+  object-fit: contain; flex-shrink: 0;
+}
+
+/* Search */
+.way-search-wrap {
+  position: relative;
+  width: 100%;
+}
+.way-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #fff;
+  border: 2px solid #3b82f6;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: #9ca3af;
+  outline: none;
+  transition: border-color .15s;
+}
+.way-search-input:focus { border-color: #2563eb; color: #111; }
+.way-search-input::placeholder { color: #9ca3af; }
+.way-search-input:disabled { opacity: .6; cursor: not-allowed; }
+.way-spinner {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px;
+  border: 2px solid #e5e7eb; border-top-color: #3b82f6;
+  border-radius: 50%; animation: spin .6s linear infinite;
+}
+@keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
+.way-dropdown {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 200;
+  background: #fff; border: 1px solid #e5e7eb;
+  border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,.12);
+  overflow: hidden; max-height: 260px; overflow-y: auto;
+}
+.way-hint   { padding: var(--space-4); color: #9ca3af; font-size: var(--text-sm); }
+.way-option {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: 10px 14px; width: 100%;
+  background: none; border: none; border-bottom: 1px solid #f3f4f6;
+  cursor: pointer; color: #111; text-align: left; font-size: var(--text-sm);
+  transition: background .12s;
+}
+.way-option:last-child { border-bottom: none; }
+.way-option:hover:not(:disabled) { background: #f9fafb; }
+.way-option:disabled { opacity: .5; cursor: not-allowed; }
+.way-option-photo { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 1px solid #e5e7eb; }
+.way-already { font-size: var(--text-xs); color: #9ca3af; margin-left: auto; }
+.way-backdrop { position: fixed; inset: 0; z-index: 199; }
+
+/* ── Guesses area (dark) ── */
+.way-guesses-area {
+  background: #1a1b3a;
+  border-radius: 0 0 16px 16px;
+  padding: var(--space-5) var(--space-4) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.way-guess-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.way-guess-namerow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.way-guess-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: #2d3561;
+  border: 2px solid rgba(255,255,255,.15);
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  color: #8b9dc3;
+}
+.way-guess-avatar-img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: top;
+}
+.way-guess-name {
+  font-size: var(--text-lg);
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: .06em;
+  text-align: center;
+}
+
+/* ── Circles row ── */
+.way-circles {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.way-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #6b7a99;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: background .3s, box-shadow .3s;
+}
+
+/* Circle colour states */
+.circle-correct {
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34,197,94,.25);
+}
+.circle-close {
+  background: #d97706;
+  box-shadow: 0 0 0 3px rgba(217,119,6,.2);
+}
+.circle-wrong {
+  background: #4b5568;
+}
+.circle-unknown {
+  background: #374151;
+}
+
+/* Content inside circles */
+.circle-flag {
+  width: 52px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.circle-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  padding: 4px;
+}
+.circle-text {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+  text-align: center;
+  line-height: 1.15;
+  padding: 4px;
+  letter-spacing: .02em;
+}
+.circle-text-sm {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+
+/* Won row pulse */
+.way-guess-won .way-circle.circle-correct {
+  animation: circlePop .4s ease forwards;
+}
+@keyframes circlePop {
+  0%   { transform: scale(.85); }
+  60%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* ── Column labels ── */
+.way-col-labels {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  margin-bottom: var(--space-1);
+}
+.way-col-labels span {
+  width: 72px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  color: #8b9dc3;
+  flex-shrink: 0;
+}
+
+/* ── Pips ── */
+.way-pips {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4) 0 var(--space-2);
+}
+.way-pip {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #2d3561; border: 1px solid #3d4571;
+  transition: background .2s;
+}
+.way-pip-used { background: #ef4444; border-color: #ef4444; }
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .way-circle { width: 52px; height: 52px; }
+  .circle-flag { width: 36px; height: 24px; }
+  .circle-logo { width: 34px; height: 34px; }
+  .circle-text { font-size: 12px; }
+  .circle-text-sm { font-size: 9px; }
+  .way-col-labels span { width: 52px; font-size: 10px; }
+  .way-circles { gap: 6px; }
+  .way-col-labels { gap: 6px; }
+  .way-guess-name { font-size: var(--text-base); }
+}

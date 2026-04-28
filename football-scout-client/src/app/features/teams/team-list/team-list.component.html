@@ -1,0 +1,200 @@
+<div class="page-container">
+  <div class="page-section">
+
+    <app-page-header title="Teams" subtitle="Explore squads and club information" />
+
+    <!-- League Selector -->
+    <div class="league-selector-wrap">
+      @if (!selectedLeague) {
+        <div class="select-trigger" (click)="toggleDropdown()" [class.open]="dropdownOpen">
+          <div class="select-trigger-inner">
+            <svg class="select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+            <span class="select-placeholder">Select a league…</span>
+          </div>
+          <svg class="chevron-icon" [class.rotated]="dropdownOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </div>
+
+        @if (dropdownOpen) {
+          <div class="select-dropdown">
+            <div class="select-search-wrap">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+              </svg>
+              <input
+                #searchInput
+                class="select-search-input"
+                type="text"
+                placeholder="Search leagues…"
+                [value]="leagueSearchTerm"
+                (input)="onLeagueSearch($any($event.target).value)"
+                (click)="$event.stopPropagation()"
+              />
+              @if (leagueSearchTerm) {
+                <button class="clear-search-btn" (click)="clearSearch($event)">×</button>
+              }
+            </div>
+
+            <div class="select-list">
+              @if (leagueSearching) {
+                <div class="select-hint">
+                  <app-bouncing-dots size="xs" [dots]="2" /> Searching…
+                </div>
+              } @else if (leagueResults.length > 0) {
+                @for (league of leagueResults; track league.id) {
+                  <button class="select-option" (click)="selectLeague(league)">
+                    @if (league.logo) {
+                      <img [src]="league.logo" [alt]="league.name" class="option-logo" (error)="onImgError($event)" />
+                    } @else {
+                      <div class="option-logo-fallback">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                      </div>
+                    }
+                    <div class="option-info">
+                      <span class="option-name">{{ league.name }}</span>
+                      @if (league.country?.name) {
+                        <span class="option-meta">{{ league.country!.name }}</span>
+                      }
+                    </div>
+                    @if (league.currentSeason) {
+                      <span class="option-season">{{ league.currentSeason.name }}</span>
+                    }
+                  </button>
+                }
+              } @else if (leagueSearchTerm && !leagueSearching) {
+                <div class="select-hint">No leagues found for "{{ leagueSearchTerm }}"</div>
+              } @else {
+                <div class="select-hint">Type a league name to search…</div>
+              }
+            </div>
+          </div>
+        }
+      } @else {
+        <!-- Selected State -->
+        <div class="selected-league-bar">
+          @if (selectedLeague.logo) {
+            <img [src]="selectedLeague.logo" [alt]="selectedLeague.name" class="option-logo" (error)="onImgError($event)" />
+          }
+          <div class="selected-info">
+            <span class="selected-name">{{ selectedLeague.name }}</span>
+            @if (selectedLeague.country?.name) {
+              <span class="selected-meta">{{ selectedLeague.country!.name }}</span>
+            }
+            @if (selectedLeague.currentSeason) {
+              <span class="selected-season">· {{ selectedLeague.currentSeason.name }}</span>
+            }
+          </div>
+          <button class="clear-btn" (click)="clearLeague()" title="Change league">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      }
+    </div>
+
+    @if (!seasonId()) {
+      <!-- Top Teams Section -->
+      @if (topLoading()) {
+        <app-loading label="Loading top teams" />
+      } @else if (topTeams().length > 0) {
+        <div class="top-section">
+          <div class="top-section-header">
+            <div class="top-section-title-wrap">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="top-icon"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+              <h2 class="top-section-title">Top Teams</h2>
+            </div>
+            <span class="top-section-sub">Current standings leaders · Click to explore</span>
+          </div>
+          <div class="top-teams-grid">
+            @for (t of topTeams(); track t.id; let i = $index) {
+              <a [routerLink]="['/teams', t.id]" class="top-team-card card card-hover">
+                <div class="top-rank" [class.rank-gold]="i === 0" [class.rank-silver]="i === 1" [class.rank-bronze]="i === 2">
+                  @if (t.position !== null && t.position !== undefined) { {{ t.position }} } @else { {{ i + 1 }} }
+                </div>
+                <div class="top-logo-wrap">
+                  @if (t.logo) {
+                    <img [src]="t.logo" [alt]="t.name" class="top-logo" (error)="onImgError($event)" />
+                  } @else {
+                    <div class="top-logo-fallback">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                    </div>
+                  }
+                </div>
+                <div class="top-info">
+                  <p class="top-name">{{ t.name }}</p>
+                </div>
+                @if (t.points !== null && t.points !== undefined) {
+                  <div class="top-points">
+                    <span class="top-points-val">{{ t.points }}</span>
+                    <span class="top-points-label">pts</span>
+                  </div>
+                }
+              </a>
+            }
+          </div>
+        </div>
+      }
+    }
+
+    @if (seasonId()) {
+
+      <!-- Team search -->
+      <div class="toolbar">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+          </svg>
+          <input
+            class="form-input"
+            type="text"
+            placeholder="Filter teams…"
+            [value]="searchTerm()"
+            (input)="searchTerm.set($any($event.target).value)"
+          />
+        </div>
+      </div>
+
+      @if (loading()) {
+        <app-loading [full]="true" label="Loading teams" />
+      } @else if (error()) {
+        <app-error-state [message]="error()" (retry)="loadTeams(seasonId()!)" />
+      } @else if (filteredTeams().length === 0) {
+        <app-empty-state title="No teams found" [message]="allTeams().length > 0 ? 'No teams match your search.' : 'No teams available for this season.'" />
+      } @else {
+        <div class="teams-grid">
+          @for (item of filteredTeams(); track item.id) {
+            <a [routerLink]="['/teams', item.id]" class="team-card card card-hover">
+              <div class="team-logo-wrap">
+                @if (item.logo) {
+                  <img [src]="item.logo" [alt]="item.name" class="team-logo" (error)="onImgError($event)" />
+                } @else {
+                  <div class="team-logo-fallback">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                  </div>
+                }
+              </div>
+              <div class="team-info">
+                <p class="team-name">{{ item.name }}</p>
+                <p class="team-country text-secondary text-sm">{{ item.country?.name }}</p>
+                @if (item.founded) {
+                  <p class="team-founded text-muted text-sm">Est. {{ item.founded }}</p>
+                }
+              </div>
+            </a>
+          }
+        </div>
+      }
+
+    }
+
+  </div>
+</div>
+
+<!-- Backdrop to close dropdown -->
+@if (dropdownOpen) {
+  <div class="dropdown-backdrop" (click)="closeDropdown()"></div>
+}

@@ -1,0 +1,253 @@
+<div class="team-detail-page">
+
+  @if (loading()) {
+    <div class="page-container"><div class="page-section"><app-loading [full]="true" label="Loading team" /></div></div>
+  } @else if (error()) {
+    <div class="page-container"><div class="page-section"><app-error-state [message]="error()" (retry)="loadData(teamId())" /></div></div>
+  } @else if (team()) {
+
+    <!-- Tabs -->
+    <div class="tabs-bar page-container">
+      <button class="tab-btn" [class.active]="activeTab() === 'squad'" (click)="setTab('squad')">Squad</button>
+      <button class="tab-btn" [class.active]="activeTab() === 'lineup'" (click)="setTab('lineup')">Starting XI</button>
+      <button class="tab-btn" [class.active]="activeTab() === 'results'" (click)="setTab('results')">Results</button>
+      <button class="tab-btn" [class.active]="activeTab() === 'upcoming'" (click)="setTab('upcoming')">Upcoming</button>
+      <button class="tab-btn" [class.active]="activeTab() === 'transfers'" (click)="setTab('transfers')">
+        Transfers @if (transfers().length) { <span class="tab-count">{{ transfers().length }}</span> }
+      </button>
+    </div>
+
+    <!-- Team Hero -->
+    <div class="team-hero-banner">
+      <div class="page-container hero-inner">
+        <a routerLink="/teams" class="btn btn-ghost btn-sm back-btn">← Teams</a>
+        <div class="team-identity">
+          <div class="team-logo-wrap">
+            @if (team()!.logo) {
+              <img [src]="team()!.logo" [alt]="team()!.name" class="team-logo-lg" (error)="onImgError($event)" />
+            }
+          </div>
+          <div class="team-identity-info">
+            <div class="team-identity-meta">
+              <span class="text-muted text-sm">{{ team()!.country?.name }}</span>
+              @if (team()!.shortCode) {
+                <span class="badge badge-gray">{{ team()!.shortCode }}</span>
+              }
+            </div>
+            <h1 class="team-name-title">{{ team()!.name }}</h1>
+            @if (team()!.founded) {
+              <p class="team-founded">Est. {{ team()!.founded }}</p>
+            }
+          </div>
+        </div>
+        @if (authService.isAuthenticated()) {
+          <app-favorite-btn [active]="isFavorite()" (toggle)="toggleFavorite()" />
+        }
+      </div>
+    </div>
+
+    <!-- Venue banner -->
+    @if (team()!.venue?.name) {
+      <div class="venue-strip">
+        <div class="page-container venue-inner">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-muted"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          <span class="venue-name">{{ team()!.venue!.name }}</span>
+          @if (team()!.venue!.city) {
+            <span class="text-muted">·</span>
+            <span class="text-secondary text-sm">{{ team()!.venue!.city }}</span>
+          }
+          @if (team()!.venue!.capacity) {
+            <span class="text-muted">·</span>
+            <span class="text-secondary text-sm">{{ team()!.venue!.capacity | number }} cap.</span>
+          }
+        </div>
+      </div>
+    }
+
+    <div class="page-container tab-content">
+
+      <!-- Squad -->
+      @if (activeTab() === 'squad') {
+        @if (squad().length === 0) {
+          <app-empty-state title="Squad not available" />
+        } @else {
+          <div class="squad-sections">
+            @for (group of squadByPosition(); track group[0]) {
+              <div class="squad-group">
+                <div class="squad-pos-header">
+                  <span class="squad-pos-label">{{ group[0] }}s</span>
+                  <span class="squad-pos-count">{{ group[1].length }}</span>
+                </div>
+                <div class="squad-cards-grid">
+                  @for (p of group[1]; track p.id) {
+                    <a [routerLink]="['/players', p.id]" class="spc">
+                      <div class="spc-photo-frame">
+                        @if (p.photo) {
+                          <img [src]="p.photo" [alt]="p.name" class="spc-photo" (error)="onImgError($event)" />
+                        } @else {
+                          <span class="spc-initials">{{ squadInitials(p) }}</span>
+                        }
+                      </div>
+                      <div class="spc-info">
+                        <span class="spc-name">{{ p.displayName || p.commonName || p.name }}</span>
+                        <div class="spc-meta">
+                          @if (p.position) { <span class="spc-pos-badge">{{ p.position }}</span> }
+                          @if (calcAge(p.dateOfBirth)) { <span class="spc-age">{{ calcAge(p.dateOfBirth) }} yrs</span> }
+                          @if (p.nationality?.flag) {
+                            <img [src]="p.nationality!.flag" [alt]="p.nationality!.name" class="spc-flag" (error)="onImgError($event)" />
+                          }
+                        </div>
+                      </div>
+                      @if (p.jerseyNumber) {
+                        <span class="spc-number">{{ p.jerseyNumber }}</span>
+                      }
+                    </a>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+
+      <!-- Starting XI -->
+      @if (activeTab() === 'lineup') {
+        @if (lineupLoading()) {
+          <app-loading [full]="true" label="Loading lineup" />
+        } @else if (pitchRows().length === 0) {
+          <app-empty-state title="Lineup not available" message="No lineup data found for the most recent match." />
+        } @else {
+          <!-- Match context -->
+          @if (starting11()) {
+            <div class="lineup-context card">
+              <span class="text-muted text-sm">Last match lineup</span>
+              <div class="lineup-match">
+                <span class="font-medium">vs</span>
+                @if (starting11()!.opponent.logo) {
+                  <img [src]="starting11()!.opponent.logo" [alt]="starting11()!.opponent.name" class="fix-logo" (error)="onImgError($event)" />
+                }
+                <span class="font-medium">{{ starting11()!.opponent.name }}</span>
+                <span class="text-muted text-sm">· {{ starting11()!.fixtureDate | date:'dd MMM yyyy' }}</span>
+              </div>
+            </div>
+          }
+
+          <div class="pitch-wrap">
+            <div class="pitch">
+              <div class="pitch-markings">
+                <div class="pitch-net-top"></div>
+                <div class="pitch-net-bottom"></div>
+                <div class="pitch-halfway"></div>
+                <div class="pitch-center-circle"></div>
+                <div class="pitch-center-dot"></div>
+                <div class="pitch-penalty-top"></div>
+                <div class="pitch-spot-top"></div>
+                <div class="pitch-goal-top"></div>
+                <div class="pitch-penalty-bottom"></div>
+                <div class="pitch-spot-bottom"></div>
+                <div class="pitch-goal-bottom"></div>
+              </div>
+              @for (row of pitchRows(); track row.top) {
+                <div class="pitch-row" [style.top.%]="row.top">
+                  @for (p of row.players; track p.playerId) {
+                    <a [routerLink]="['/players', p.playerId]" class="pitch-player">
+                      <div class="pitch-avatar-wrap">
+                        <div class="pitch-avatar">
+                          @if (p.photo) {
+                            <img [src]="p.photo" [alt]="p.name" class="pitch-avatar-img" (error)="onImgError($event)" />
+                          } @else {
+                            <span class="pitch-avatar-initials">{{ playerInitials(p) }}</span>
+                          }
+                        </div>
+                        @if (p.jerseyNumber) {
+                          <span class="pitch-jersey">{{ p.jerseyNumber }}</span>
+                        }
+                      </div>
+                      <span class="pitch-name">{{ pitchShortName(p.name) }}</span>
+                    </a>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+        }
+      }
+
+      <!-- Results -->
+      @if (activeTab() === 'results') {
+        @if (lastFixtures().length === 0) {
+          <app-empty-state title="No recent results" />
+        } @else {
+          <div class="fixture-list">
+            @for (f of lastFixtures(); track f.id) {
+              <a [routerLink]="['/fixtures', f.id]" class="fixture-card card card-hover">
+                <span class="fix-date text-muted text-sm">{{ formatDate(f) }}</span>
+                <span class="venue-badge badge" [class.badge-green]="opponent(f).venue === 'H'" [class.badge-gray]="opponent(f).venue === 'A'">
+                  {{ opponent(f).venue }}
+                </span>
+                <div class="fix-opponent">
+                  <img [src]="opponent(f).logo" [alt]="opponent(f).name" class="fix-logo" (error)="onImgError($event)" />
+                  <span class="font-medium">{{ opponent(f).name }}</span>
+                </div>
+                <span class="fix-score">{{ scoreDisplay(f) }}</span>
+              </a>
+            }
+          </div>
+        }
+      }
+
+      <!-- Upcoming -->
+      @if (activeTab() === 'upcoming') {
+        @if (nextFixtures().length === 0) {
+          <app-empty-state title="No upcoming fixtures" />
+        } @else {
+          <div class="fixture-list">
+            @for (f of nextFixtures(); track f.id) {
+              <a [routerLink]="['/fixtures', f.id]" class="fixture-card card card-hover">
+                <span class="fix-date text-muted text-sm">{{ formatDate(f) }}</span>
+                <span class="venue-badge badge" [class.badge-green]="opponent(f).venue === 'H'" [class.badge-gray]="opponent(f).venue === 'A'">
+                  {{ opponent(f).venue }}
+                </span>
+                <div class="fix-opponent">
+                  <img [src]="opponent(f).logo" [alt]="opponent(f).name" class="fix-logo" (error)="onImgError($event)" />
+                  <span class="font-medium">{{ opponent(f).name }}</span>
+                </div>
+                <span class="fix-date text-muted text-sm">{{ f.state?.name ?? '–' }}</span>
+              </a>
+            }
+          </div>
+        }
+      }
+
+      <!-- Transfers -->
+      @if (activeTab() === 'transfers') {
+        @if (transfers().length === 0) {
+          <app-empty-state title="No transfer data" />
+        } @else {
+          <div class="transfer-list">
+            @for (t of transfers(); track t.id) {
+              <div class="transfer-item card">
+                <img [src]="t.player.photo" [alt]="t.player.name" class="player-photo-sm" (error)="onImgError($event)" />
+                <div class="transfer-item-info">
+                  <a [routerLink]="['/players', t.player.id]" class="transfer-player-name">{{ t.player.name }}</a>
+                  <div class="transfer-flow-inline">
+                    @if (t.fromTeam) { <span class="text-sm text-muted">{{ t.fromTeam.name }}</span> }
+                    <span class="transfer-arrow">→</span>
+                    @if (t.toTeam) { <span class="text-sm text-muted">{{ t.toTeam.name }}</span> }
+                  </div>
+                </div>
+                <div class="transfer-item-right">
+                  <span class="transfer-fee-sm">{{ formatAmount(t.amount) }}</span>
+                  <span class="text-muted text-sm">{{ formatPlainDate(t.date) }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+
+    </div>
+
+  }
+</div>

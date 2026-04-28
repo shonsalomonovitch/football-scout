@@ -1,0 +1,300 @@
+<!-- ── Desktop Expanding Sidebar ── -->
+<aside
+  class="sidebar"
+  [class.sidebar--open]="sidebarOpen()"
+  (mouseenter)="openSidebar()"
+  (mouseleave)="closeSidebar()"
+  aria-label="Main navigation"
+>
+
+  <!-- Brand -->
+  <a routerLink="/" class="sidebar-brand" (click)="closeMobile()">
+    <span class="si-wrap">
+      <span class="sidebar-brand-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <polygon points="12,6 15,9 14,13 10,13 9,9" fill="none" stroke="currentColor" stroke-width="1.4"/>
+        </svg>
+      </span>
+    </span>
+    <span class="sl-label sidebar-brand-text">Scout Hub</span>
+  </a>
+
+  <!-- Main nav -->
+  <nav class="sidebar-nav">
+
+    <!-- Home: grid/dashboard squares -->
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}"
+       class="sidebar-link" aria-label="Home">
+      <span class="si-wrap">
+        <svg class="si" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+      </span>
+      <span class="sl-label">Home</span>
+    </a>
+
+    <!-- Live: horn speaker -->
+    <a routerLink="/livescores" routerLinkActive="active"
+       class="sidebar-link sidebar-link-live" aria-label="Live Scores">
+      <span class="si-wrap">
+        <span class="live-pip" aria-hidden="true"></span>
+        <img class="si si-img" src="horn-speaker-with-handle.png" alt="" aria-hidden="true" />
+      </span>
+      <span class="sl-label">Live Scores</span>
+    </a>
+
+    <!-- Leagues: football award -->
+    <a routerLink="/leagues" routerLinkActive="active"
+       class="sidebar-link" aria-label="Leagues">
+      <span class="si-wrap">
+        <img class="si si-img" src="football-award-with-white-details.png" alt="" aria-hidden="true" />
+      </span>
+      <span class="sl-label">Leagues</span>
+    </a>
+
+    <!-- Teams: football players on game -->
+    <a routerLink="/teams" routerLinkActive="active"
+       class="sidebar-link" aria-label="Teams">
+      <span class="si-wrap">
+        <img class="si si-img" src="football-players-on-game.png" alt="" aria-hidden="true" />
+      </span>
+      <span class="sl-label">Teams</span>
+    </a>
+
+    <!-- Players: player kicking ball -->
+    <a routerLink="/players" routerLinkActive="active"
+       class="sidebar-link" aria-label="Players">
+      <span class="si-wrap">
+        <img class="si si-img" src="football-player-kicking-ball.png" alt="" aria-hidden="true" />
+      </span>
+      <span class="sl-label">Players</span>
+    </a>
+
+    <!-- Fixtures: whistle -->
+    <a routerLink="/fixtures" routerLinkActive="active"
+       class="sidebar-link" aria-label="Fixtures">
+      <span class="si-wrap">
+        <img class="si si-img" src="whistle-with-white-detail.png" alt="" aria-hidden="true" />
+      </span>
+      <span class="sl-label">Fixtures</span>
+    </a>
+
+    <!-- Transfers: horizontal swap arrows -->
+    <a routerLink="/transfers" routerLinkActive="active"
+       class="sidebar-link" aria-label="Transfers">
+      <span class="si-wrap">
+        <svg class="si" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M17 3l4 4-4 4"/><path d="M3 7h18"/>
+          <path d="M7 21l-4-4 4-4"/><path d="M21 17H3"/>
+        </svg>
+      </span>
+      <span class="sl-label">Transfers</span>
+    </a>
+
+    <!-- Compare: two overlapping panels -->
+    <a routerLink="/players/compare" routerLinkActive="active"
+       class="sidebar-link" aria-label="Compare Players">
+      <span class="si-wrap">
+        <svg class="si" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5"/>
+          <path d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"/>
+          <line x1="12" y1="3" x2="12" y2="21"/>
+        </svg>
+      </span>
+      <span class="sl-label">Compare</span>
+    </a>
+
+    <!-- Games: controller -->
+    <a routerLink="/games" routerLinkActive="active"
+       class="sidebar-link" aria-label="Games">
+      <span class="si-wrap">
+        <svg class="si" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="2" y="7" width="20" height="13" rx="4"/>
+          <path d="M8 13v-2m0 0V9m0 2H6m4 0h2"/>
+          <circle cx="16" cy="12" r="1" fill="currentColor" stroke="none"/>
+          <circle cx="18" cy="14" r="1" fill="currentColor" stroke="none"/>
+        </svg>
+      </span>
+      <span class="sl-label">Games</span>
+    </a>
+
+    @if (auth.isAuthenticated()) {
+      <!-- Favorites: star outline -->
+      <a routerLink="/favorites" routerLinkActive="active"
+         class="sidebar-link" aria-label="Favorites">
+        <span class="si-wrap">
+          <svg class="si" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+        </span>
+        <span class="sl-label">Favorites</span>
+      </a>
+    }
+
+  </nav>
+
+  <!-- Bottom section -->
+  <div class="sidebar-bottom">
+
+    <!-- Theme toggle -->
+    <button class="sidebar-link"
+            (click)="theme.toggle()"
+            [attr.aria-label]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'">
+      <span class="si-wrap">
+        @if (theme.isDark()) {
+          <svg class="si" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+          </svg>
+        } @else {
+          <svg class="si" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        }
+      </span>
+      <span class="sl-label">{{ theme.isDark() ? 'Light mode' : 'Dark mode' }}</span>
+    </button>
+
+    @if (auth.isAuthenticated()) {
+      <!-- User row -->
+      <div class="sidebar-link sidebar-user-row">
+        <span class="si-wrap">
+          <span class="sidebar-avatar" [title]="auth.currentUser()?.name ?? ''">{{ avatarInitial }}</span>
+        </span>
+        <span class="sl-label sidebar-user-name">{{ displayName }}</span>
+      </div>
+      <!-- Sign out -->
+      <button class="sidebar-link sidebar-link-danger" (click)="logout()" aria-label="Sign out">
+        <span class="si-wrap">
+          <svg class="si" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+          </svg>
+        </span>
+        <span class="sl-label">Sign out</span>
+      </button>
+    } @else {
+      <a routerLink="/login" class="sidebar-link" aria-label="Sign in">
+        <span class="si-wrap">
+          <svg class="si" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M11 7L9.6 8.4l2.6 2.6H2v2h10.2l-2.6 2.6L11 17l5-5-5-5zm9 12h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-8v2h8v14z"/>
+          </svg>
+        </span>
+        <span class="sl-label">Sign in</span>
+      </a>
+      <a routerLink="/register" class="sidebar-link sidebar-link-accent" aria-label="Register">
+        <span class="si-wrap">
+          <svg class="si" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+        </span>
+        <span class="sl-label">Register</span>
+      </a>
+    }
+
+  </div>
+</aside>
+
+<!-- ── Mobile Bottom Nav ── -->
+<nav class="mobile-nav" aria-label="Mobile navigation">
+  <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}"
+     class="mobile-nav-link" aria-label="Home">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+    </svg>
+    <span>Home</span>
+  </a>
+
+  <a routerLink="/livescores" routerLinkActive="active"
+     class="mobile-nav-link mobile-nav-live" aria-label="Live">
+    <span class="live-pip-sm" aria-hidden="true"></span>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zM3.18 11A9.008 9.008 0 0111 3.18V1h2v2.18A9.009 9.009 0 0120.82 11H23v2h-2.18A9.009 9.009 0 0113 20.82V23h-2v-2.18A9.008 9.008 0 013.18 13H1v-2h2.18z"/>
+    </svg>
+    <span>Live</span>
+  </a>
+
+  <a routerLink="/players" routerLinkActive="active"
+     class="mobile-nav-link" aria-label="Players">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+    </svg>
+    <span>Players</span>
+  </a>
+
+  <a routerLink="/leagues" routerLinkActive="active"
+     class="mobile-nav-link" aria-label="Leagues">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2z"/>
+    </svg>
+    <span>Leagues</span>
+  </a>
+
+  <button class="mobile-nav-link" (click)="toggleMobile()"
+          aria-label="More" [attr.aria-expanded]="mobileOpen()">
+    @if (mobileOpen()) {
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+      </svg>
+      <span>Close</span>
+    } @else {
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+      </svg>
+      <span>More</span>
+    }
+  </button>
+</nav>
+
+<!-- Mobile slide-up drawer -->
+@if (mobileOpen()) {
+  <div class="mobile-overlay" (click)="closeMobile()" aria-hidden="true">
+    <div class="mobile-drawer" (click)="$event.stopPropagation()" role="dialog" aria-label="Navigation menu">
+      <a routerLink="/fixtures"       routerLinkActive="active" class="drawer-link" (click)="closeMobile()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
+        Fixtures
+      </a>
+      <a routerLink="/teams"          routerLinkActive="active" class="drawer-link" (click)="closeMobile()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+        Teams
+      </a>
+      <a routerLink="/transfers"      routerLinkActive="active" class="drawer-link" (click)="closeMobile()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+        Transfers
+      </a>
+      <a routerLink="/players/compare" routerLinkActive="active" class="drawer-link" (click)="closeMobile()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h5v2h2V1h-2v2zm0 15H5l5-6v6zm9-15h-5v2h5v13l-5-6v8h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
+        Compare Players
+      </a>
+      <a routerLink="/games"          routerLinkActive="active" class="drawer-link" (click)="closeMobile()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5S14.67 12 15.5 12s1.5.67 1.5 1.5S16.33 15 15.5 15zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5S19.33 12 18.5 12z"/></svg>
+        Games
+      </a>
+      @if (auth.isAuthenticated()) {
+        <a routerLink="/favorites"    routerLinkActive="active" class="drawer-link" (click)="closeMobile()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          Favorites
+        </a>
+      }
+      <div class="drawer-divider"></div>
+      <div class="drawer-row">
+        <button class="drawer-theme-btn" (click)="theme.toggle()">
+          @if (theme.isDark()) {
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2"/></svg>
+            Light Mode
+          } @else {
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            Dark Mode
+          }
+        </button>
+        @if (auth.isAuthenticated()) {
+          <button class="drawer-signout-btn" (click)="logout()">Sign out</button>
+        } @else {
+          <a routerLink="/login"    class="drawer-link-inline"              (click)="closeMobile()">Sign in</a>
+          <a routerLink="/register" class="drawer-link-inline drawer-link-accent" (click)="closeMobile()">Register</a>
+        }
+      </div>
+    </div>
+  </div>
+}

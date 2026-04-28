@@ -1,0 +1,139 @@
+<div class="page-container">
+  <div class="page-section">
+
+    <app-page-header title="Favorites" subtitle="Your saved players, teams, and scouting notes" />
+
+    @if (loading()) {
+      <app-loading [full]="true" label="Loading favorites" />
+    } @else if (error()) {
+      <app-error-state [message]="error()" (retry)="loadAll()" />
+    } @else {
+
+      <!-- Tabs -->
+      <div class="tabs" style="margin-bottom: var(--space-6);">
+        <button class="tab-btn" [class.active]="activeTab() === 'players'" (click)="setTab('players')">
+          Players
+          @if (favPlayers().length > 0) {
+            <span class="tab-count">{{ favPlayers().length }}</span>
+          }
+        </button>
+        <button class="tab-btn" [class.active]="activeTab() === 'teams'" (click)="setTab('teams')">
+          Teams
+          @if (favTeams().length > 0) {
+            <span class="tab-count">{{ favTeams().length }}</span>
+          }
+        </button>
+        <button class="tab-btn" [class.active]="activeTab() === 'notes'" (click)="setTab('notes')">
+          Notes
+          @if (notes().length > 0) {
+            <span class="tab-count">{{ notes().length }}</span>
+          }
+        </button>
+      </div>
+
+      <!-- Players Tab -->
+      @if (activeTab() === 'players') {
+        @if (favPlayers().length === 0) {
+          <app-empty-state title="No favorite players" message="Browse players and save your targets." />
+        } @else {
+          <div class="fav-list">
+            @for (fp of favPlayers(); track fp.id) {
+              <div class="fav-row card-compact">
+                <a [routerLink]="['/players', fp.apiPlayerId]" class="fav-avatar">
+                  @if (fp.photo) {
+                    <img [src]="fp.photo" [alt]="fp.displayName || fp.playerName" class="fav-avatar-img" (error)="onImgError($event)" />
+                  }
+                  <span class="fav-avatar-initials">{{ initials(fp.displayName || fp.playerName) }}</span>
+                </a>
+                <div class="fav-info">
+                  <p class="fav-name">
+                    <a [routerLink]="['/players', fp.apiPlayerId]" class="fav-link">{{ fp.displayName || fp.playerName }}</a>
+                  </p>
+                  @if (fp.teamName) {
+                    <p class="fav-sub text-muted text-sm">{{ fp.teamName }}</p>
+                  }
+                  <p class="fav-date text-muted text-xs">Saved {{ formatDate(fp.createdAt) }}</p>
+                </div>
+                <div class="fav-actions">
+                  <a [routerLink]="['/players', fp.apiPlayerId]" class="btn btn-ghost btn-sm">View</a>
+                  <button class="btn btn-ghost btn-sm text-danger" (click)="removePlayer(fp.apiPlayerId)">Remove</button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+
+      <!-- Teams Tab -->
+      @if (activeTab() === 'teams') {
+        @if (favTeams().length === 0) {
+          <app-empty-state title="No favorite teams" message="Browse teams and save your targets." />
+        } @else {
+          <div class="fav-list">
+            @for (ft of favTeams(); track ft.id) {
+              <div class="fav-row card-compact">
+                <a [routerLink]="['/teams', ft.apiTeamId]" class="fav-team-logo">
+                  @if (ft.logo) {
+                    <img [src]="ft.logo" [alt]="ft.teamName" class="fav-team-logo-img" (error)="onImgError($event)" />
+                  } @else {
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                  }
+                </a>
+                <div class="fav-info">
+                  <p class="fav-name">
+                    <a [routerLink]="['/teams', ft.apiTeamId]" class="fav-link">{{ ft.teamName }}</a>
+                  </p>
+                  @if (ft.leagueName) {
+                    <p class="fav-sub text-muted text-sm">{{ ft.leagueName }}</p>
+                  }
+                  <p class="fav-date text-muted text-xs">Saved {{ formatDate(ft.createdAt) }}</p>
+                </div>
+                <div class="fav-actions">
+                  <a [routerLink]="['/teams', ft.apiTeamId]" class="btn btn-ghost btn-sm">View</a>
+                  <button class="btn btn-ghost btn-sm text-danger" (click)="removeTeam(ft.apiTeamId)">Remove</button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+
+      <!-- Notes Tab -->
+      @if (activeTab() === 'notes') {
+        @if (notes().length === 0) {
+          <app-empty-state title="No scouting notes" message="Add notes on player detail pages." />
+        } @else {
+          <div class="notes-list">
+            @for (note of notes(); track note.id) {
+              <div class="note-card card">
+                <div class="note-header">
+                  <a [routerLink]="['/players', note.apiPlayerId]" class="note-player-link">{{ note.playerName }}</a>
+                  <span class="text-muted text-sm">{{ formatDate(note.createdAt) }}</span>
+                </div>
+
+                @if (editingNoteId() === note.id) {
+                  <form [formGroup]="editForm" (ngSubmit)="saveEdit(note)">
+                    <textarea formControlName="content" class="form-input note-textarea" rows="3"></textarea>
+                    <div class="note-edit-actions">
+                      <button type="submit" class="btn btn-primary btn-sm" [disabled]="editForm.invalid">Save</button>
+                      <button type="button" class="btn btn-ghost btn-sm" (click)="cancelEdit()">Cancel</button>
+                    </div>
+                  </form>
+                } @else {
+                  <p class="note-content">{{ notePreview(note.content) }}</p>
+                  <div class="note-actions">
+                    <a [routerLink]="['/players', note.apiPlayerId]" class="btn btn-ghost btn-sm">View Player</a>
+                    <button class="btn btn-ghost btn-sm" (click)="startEdit(note)">Edit</button>
+                    <button class="btn btn-ghost btn-sm text-danger" (click)="deleteNote(note.id)">Delete</button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      }
+
+    }
+
+  </div>
+</div>

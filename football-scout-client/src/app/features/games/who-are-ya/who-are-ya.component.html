@@ -1,0 +1,211 @@
+<div class="way-page">
+
+  <!-- ── White card ── -->
+  <div class="way-card">
+    <div class="way-toprow">
+      <a routerLink="/games" class="way-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Games
+      </a>
+      <span class="way-mode-label">{{ mode() === 'daily' ? '📅 Daily' : '🎲 Random' }}</span>
+    </div>
+
+    @if (loading()) {
+      <div class="way-card-loading">Loading today's puzzle…</div>
+    } @else if (error()) {
+      <div class="way-card-loading">{{ error() }}</div>
+    } @else {
+
+      <!-- Confirmed position hint (free clue) -->
+      @let ch = confirmedHints();
+      @if (ch.position) {
+        <div class="way-pos-hint">{{ posAbbr(ch.position) }}</div>
+      }
+
+      <!-- Photo -->
+      <div class="way-photo-area">
+        @if (photoError()) {
+          <div class="way-photo-fallback">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="#ccc"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          </div>
+        } @else {
+          <img [src]="photo()" class="way-photo"
+            [style.filter]="gameState() === 'playing' ? 'blur(' + blurPx() + 'px)' : 'blur(0)'"
+            alt="Mystery player" (error)="onPhotoError($event)" />
+        }
+        @if (gameState() === 'won')  { <div class="way-photo-overlay way-overlay-won">✓ Correct!</div> }
+        @if (gameState() === 'lost') { <div class="way-photo-overlay way-overlay-lost">Game over</div> }
+      </div>
+
+      <!-- Confirmed hints strip -->
+      @if (ch.nat || ch.league || ch.team || ch.position || ch.age !== undefined || ch.shirtNumber !== undefined) {
+        <div class="way-confirmed-strip">
+          @if (ch.nat) {
+            <div class="confirmed-badge">
+              @if (ch.nat.flag) { <img [src]="ch.nat.flag" class="conf-flag" (error)="onImgError($event)" /> }
+              <span>{{ ch.nat.value }}</span>
+            </div>
+          }
+          @if (ch.league) {
+            <div class="confirmed-badge">
+              @if (ch.league.logo) { <img [src]="ch.league.logo" class="conf-logo" (error)="onImgError($event)" /> }
+              <span>{{ ch.league.value }}</span>
+            </div>
+          }
+          @if (ch.team) {
+            <div class="confirmed-badge">
+              @if (ch.team.logo) { <img [src]="ch.team.logo" class="conf-logo" (error)="onImgError($event)" /> }
+              <span>{{ ch.team.value }}</span>
+            </div>
+          }
+          @if (ch.position) {
+            <div class="confirmed-badge"><span>{{ posAbbr(ch.position) }}</span></div>
+          }
+          @if (ch.age !== undefined) {
+            <div class="confirmed-badge"><span>Age {{ ch.age }}</span></div>
+          }
+          @if (ch.shirtNumber !== undefined) {
+            <div class="confirmed-badge"><span>#{{ ch.shirtNumber }}</span></div>
+          }
+        </div>
+      }
+
+      <!-- Revealed -->
+      @if (revealedPlayer()) {
+        <div class="way-reveal" [class.way-reveal-won]="gameState() === 'won'">
+          @if (gameState() === 'won') {
+            <p class="way-reveal-title">🎉 {{ revealedPlayer()!.displayName }} — {{ guesses().length }} {{ guesses().length === 1 ? 'guess' : 'guesses' }}!</p>
+          } @else {
+            <p class="way-reveal-title">It was {{ revealedPlayer()!.displayName }}</p>
+          }
+          @if (mode() === 'random') {
+            <button class="way-next-btn" (click)="loadRandom()">Next Player →</button>
+          }
+        </div>
+      }
+
+      <!-- Search -->
+      @if (gameState() === 'playing') {
+        <div class="way-search-wrap" [class.open]="dropdownOpen()">
+          <input class="way-search-input" type="text"
+            [placeholder]="'GUESS ' + (guesses().length + 1) + ' OF ' + maxGuesses"
+            [value]="searchTerm()"
+            (input)="onInput($any($event.target).value)"
+            [disabled]="submitting()" autocomplete="off" />
+          @if (suggestLoading()) { <app-bouncing-dots size="xs" [dots]="2" /> }
+          @if (dropdownOpen() && searchTerm().length >= 2) {
+            <div class="way-dropdown">
+              @if (suggestLoading()) {
+                <div class="way-hint">Searching…</div>
+              } @else if (suggestions().length > 0) {
+                @for (p of suggestions(); track p.id) {
+                  <button class="way-option" (click)="selectPlayer(p)" [disabled]="isAlreadyGuessed(p.id)">
+                    @if (p.photo) { <img [src]="p.photo" class="way-option-photo" (error)="onImgError($event)" /> }
+                    <span>{{ p.displayName }}</span>
+                    @if (isAlreadyGuessed(p.id)) { <span class="way-already">Already guessed</span> }
+                  </button>
+                }
+              } @else {
+                <div class="way-hint">No players found</div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+    }
+  </div>
+
+  <!-- ── Guesses (dark) ── -->
+  @if (guesses().length > 0) {
+    <div class="way-guesses-area">
+
+      <!-- Column labels at top -->
+      <div class="way-col-labels">
+        <span>NAT</span><span>LGE</span><span>TEAM</span><span>POS</span><span>AGE</span><span>SHIRT</span>
+      </div>
+
+      @for (g of guesses().slice().reverse(); track g.id; let i = $index) {
+        <div class="way-guess-block" [class.way-guess-won]="i === 0 && gameState() === 'won'">
+          <div class="way-guess-namerow">
+            <div class="way-guess-avatar">
+              @if (g.photo) {
+                <img [src]="g.photo" class="way-guess-avatar-img" (error)="onImgError($event)" />
+              } @else {
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" opacity="0.5"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              }
+            </div>
+            <p class="way-guess-name">{{ g.displayName | uppercase }}</p>
+          </div>
+          <div class="way-circles">
+
+            <!-- NAT -->
+            <div class="way-circle" [class]="'circle-' + (g.hints?.nationality?.match ?? 'wrong')">
+              @if (g.hints?.nationality?.flag) {
+                <img [src]="g.hints!.nationality.flag" class="circle-flag" (error)="onImgError($event)" />
+              } @else {
+                <span class="circle-text">{{ g.hints?.nationality?.value?.slice(0,3) | uppercase }}</span>
+              }
+            </div>
+
+            <!-- LGE -->
+            <div class="way-circle" [class]="'circle-' + (g.hints?.league?.match ?? 'wrong')">
+              @if (g.hints?.league?.logo) {
+                <img [src]="g.hints!.league.logo" class="circle-logo" (error)="onImgError($event)" />
+              } @else {
+                <span class="circle-text circle-text-sm">{{ g.hints?.league?.value }}</span>
+              }
+            </div>
+
+            <!-- TEAM -->
+            <div class="way-circle" [class]="'circle-' + (g.hints?.team?.match ?? 'wrong')">
+              @if (g.hints?.team?.logo) {
+                <img [src]="g.hints!.team.logo" class="circle-logo" (error)="onImgError($event)" />
+              } @else {
+                <span class="circle-text circle-text-sm">{{ g.hints?.team?.value?.slice(0,3) | uppercase }}</span>
+              }
+            </div>
+
+            <!-- POS -->
+            <div class="way-circle" [class]="'circle-' + (g.hints?.position?.match ?? 'wrong')">
+              <span class="circle-text">{{ posAbbr(g.hints?.position?.value) }}</span>
+            </div>
+
+            <!-- AGE -->
+            @let am = g.hints?.age?.match ?? 'wrong';
+            <div class="way-circle" [class]="'circle-' + am">
+              <span class="circle-text">
+                {{ g.hints?.age?.value }}@if (am === 'higher' || am === 'close-higher') {↑} @else if (am === 'lower' || am === 'close-lower') {↓}
+              </span>
+            </div>
+
+            <!-- SHIRT -->
+            @let sm = g.hints?.shirtNumber?.match ?? 'unknown';
+            <div class="way-circle" [class]="'circle-' + sm">
+              <span class="circle-text">
+                @if (g.hints?.shirtNumber?.value !== null && g.hints?.shirtNumber?.value !== undefined) {
+                  #{{ g.hints!.shirtNumber.value }}@if (sm === 'higher' || sm === 'close-higher') {↑} @else if (sm === 'lower' || sm === 'close-lower') {↓}
+                } @else { ? }
+              </span>
+            </div>
+
+          </div>
+        </div>
+      }
+
+    </div>
+  }
+
+  <!-- Pips -->
+  @if (!loading() && !error() && gameState() === 'playing') {
+    <div class="way-pips">
+      @for (n of [1,2,3,4,5,6,7,8]; track n) {
+        <div class="way-pip" [class.way-pip-used]="n <= guesses().length"></div>
+      }
+    </div>
+  }
+
+</div>
+@if (dropdownOpen()) {
+  <div class="way-backdrop" (click)="closeDropdown()"></div>
+}

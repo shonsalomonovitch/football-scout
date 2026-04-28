@@ -1,0 +1,493 @@
+<div class="player-detail-page">
+
+  @if (loading()) {
+    <div class="page-container"><div class="page-section"><app-loading [full]="true" label="Loading player" /></div></div>
+  } @else if (error()) {
+    <div class="page-container"><div class="page-section"><app-error-state [message]="error()" (retry)="loadPlayer(playerId())" /></div></div>
+  } @else if (player()) {
+
+    <!-- ── Tabs ── -->
+    <div class="tabs-bar-wrap">
+      <div class="page-container tabs-bar">
+        <button class="tab-btn" [class.active]="activeTab() === 'statistics'" (click)="setTab('statistics')">Statistics</button>
+        <button class="tab-btn" [class.active]="activeTab() === 'transfers'" (click)="setTab('transfers')">
+          Transfers @if (transfers().length) { <span class="tab-count">{{ transfers().length }}</span> }
+        </button>
+        @if (authService.isAuthenticated()) {
+          <button class="tab-btn" [class.active]="activeTab() === 'notes'" (click)="setTab('notes')">
+            Scouting Notes @if (playerNotes().length) { <span class="tab-count">{{ playerNotes().length }}</span> }
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- ── Hero ── -->
+    <div class="player-hero">
+      <div class="page-container hero-inner">
+
+        <a routerLink="/players" class="back-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          Players
+        </a>
+
+        <div class="hero-body">
+          <!-- Photo -->
+          <div class="hero-photo-wrap">
+            @if (player()!.photo) {
+              <img [src]="player()!.photo" [alt]="player()!.name" class="hero-photo" (error)="onImgError($event)" />
+            } @else {
+              <div class="hero-photo-placeholder">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              </div>
+            }
+          </div>
+
+          <!-- Info -->
+          <div class="hero-info">
+            <div class="hero-badges">
+              @if (player()!.position?.name) {
+                <span class="badge badge-accent">{{ player()!.position!.name }}</span>
+              }
+              @if (player()!.nationality) {
+                <div class="nationality-pill">
+                  @if (player()!.nationality!.image_path) {
+                    <img [src]="player()!.nationality!.image_path" class="flag-img" [alt]="player()!.nationality!.name" (error)="onImgError($event)" />
+                  }
+                  <span>{{ player()!.nationality!.name }}</span>
+                </div>
+              }
+              @if (careerSummary()?.isCurrentlyOnLoan) {
+                <div class="hero-loan-pill">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  On Loan
+                </div>
+              }
+            </div>
+
+            <h1 class="hero-name">{{ player()!.displayName || player()!.name }}</h1>
+
+            <div class="hero-meta-row">
+              @if (calcAge(player()!.dateOfBirth)) {
+                <span class="hero-meta-chip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  {{ calcAge(player()!.dateOfBirth) }} yrs · {{ formatDate(player()!.dateOfBirth) }}
+                </span>
+              }
+              @if (player()!.height) {
+                <span class="hero-meta-chip">{{ player()!.height }} cm</span>
+              }
+              @if (player()!.weight) {
+                <span class="hero-meta-chip">{{ player()!.weight }} kg</span>
+              }
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="hero-actions">
+            @if (authService.isAuthenticated()) {
+              <app-favorite-btn [active]="isFavorite()" (toggle)="toggleFavorite()" />
+            }
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="page-container tab-content">
+
+      <!-- ── Statistics ── -->
+      @if (activeTab() === 'statistics') {
+        @if (!deduplicatedStats().length) {
+          <app-empty-state title="No statistics available" message="No season data found for this player." />
+        } @else {
+
+              <!-- ── Analytics ── -->
+          @if (radarDatasets().length >= 1) {
+            <section class="content-section analytics-section">
+
+              <!-- Section header -->
+              <div class="analytics-hd">
+                <div class="analytics-hd-left">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                  <span class="analytics-hd-label">Player Analytics</span>
+                </div>
+                <span class="analytics-hd-season">{{ getSeasonLabel(deduplicatedStats()[0].season_id) }}</span>
+              </div>
+
+              <div class="analytics-grid">
+
+                <!-- ── Radar Card ── -->
+                <div class="analytics-card">
+                  <div class="ac-header">
+                    <div class="ac-title-row">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="color:var(--color-accent)" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                      <span class="ac-title">Attribute Profile</span>
+                    </div>
+                    @if (radarOverallScore() !== null) {
+                      <div class="ac-score-badge">
+                        <span class="ac-score-num">{{ radarOverallScore() }}</span>
+                        <span class="ac-score-lbl">Score</span>
+                      </div>
+                    }
+                  </div>
+
+                  <app-radar-chart [labels]="radarLabels()" [datasets]="radarDatasets()" />
+
+                  <!-- Attribute score bars -->
+                  @if (radarBars().length) {
+                    <div class="attr-bars">
+                      @for (bar of radarBars(); track bar.label) {
+                        <div class="attr-bar-row">
+                          <span class="attr-bar-label">{{ bar.label }}</span>
+                          <div class="attr-bar-track">
+                            <div
+                              class="attr-bar-fill"
+                              [class]="'fill-' + bar.tier"
+                              [style.width.%]="bar.value"
+                            ></div>
+                          </div>
+                          <span class="attr-bar-val" [class]="'fill-' + bar.tier">{{ bar.value }}</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <!-- ── Sparklines Card ── -->
+                @if (sparklineData().length >= 1) {
+                  <div class="analytics-card">
+                    <div class="ac-header">
+                      <div class="ac-title-row">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="color:var(--color-accent)" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        <span class="ac-title">Historical Trends</span>
+                      </div>
+                      <span class="ac-sub">{{ deduplicatedStats().length }} seasons tracked</span>
+                    </div>
+
+                    <div class="sparkline-list">
+                      @for (stat of sparklineData(); track stat.label) {
+                        <div class="sparkline-row">
+
+                          <!-- Label + trend badge -->
+                          <div class="sp-meta">
+                            <span class="sp-label">{{ stat.label }}</span>
+                            @if (stat.trend !== 'flat') {
+                              <span class="sp-trend" [class]="'sp-trend-' + stat.trend">
+                                {{ stat.trend === 'up' ? '▲' : '▼' }}
+                                {{ stat.delta > 0 ? '+' : '' }}{{ stat.delta | number:'1.0-1' }}
+                              </span>
+                            }
+                          </div>
+
+                          <!-- Sparkline SVG -->
+                          <div class="sp-chart">
+                            <svg width="100%" height="36" viewBox="0 0 120 36" class="sp-svg"
+                                 preserveAspectRatio="none" aria-hidden="true">
+                              <!-- Area fill -->
+                              <polygon
+                                [attr.points]="getSparklineAreaPoints(stat.values, 120, 28)"
+                                [attr.fill]="stat.color + '28'"
+                              />
+                              <!-- Line -->
+                              <polyline
+                                [attr.points]="getSparklinePoints(stat.values, 120, 28)"
+                                fill="none"
+                                [attr.stroke]="stat.color"
+                                stroke-width="1.8"
+                                stroke-linejoin="round"
+                                stroke-linecap="round"
+                              />
+                              <!-- Last-point dot -->
+                              @if (lastSparklinePoint(stat.values, 120, 28); as lp) {
+                                <circle [attr.cx]="lp.x" [attr.cy]="lp.y" r="3" [attr.fill]="stat.color" />
+                                <circle [attr.cx]="lp.x" [attr.cy]="lp.y" r="5.5" [attr.fill]="stat.color + '28'" />
+                              }
+                            </svg>
+                          </div>
+
+                          <!-- Current value + progress bar + peak -->
+                          <div class="sp-vals">
+                            <span class="sp-current" [style.color]="stat.color">{{ stat.latest | number:'1.0-1' }}</span>
+                            <div class="sp-bar-track">
+                              <div
+                                class="sp-bar-fill"
+                                [style.width.%]="(stat.latest / stat.peak) * 100"
+                                [style.background]="stat.color"
+                              ></div>
+                            </div>
+                            <span class="sp-peak">pk {{ stat.peak | number:'1.0-1' }}</span>
+                          </div>
+
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+
+              </div>
+            </section>
+          }
+
+          <!-- Performance Overview (most recent season) -->
+          @if (deduplicatedStats()[0]?.details?.length) {
+            <section class="content-section">
+              <div class="section-header">
+                <h2 class="section-title">Performance Overview</h2>
+                <span class="section-subtitle">{{ getSeasonLabel(deduplicatedStats()[0].season_id) }}</span>
+              </div>
+              <app-player-stats-panel [details]="deduplicatedStats()[0].details!" />
+            </section>
+          }
+
+          <!-- Season breakdown with selector -->
+          <section class="content-section">
+            <div class="section-header">
+              <h2 class="section-title">Season Breakdown</h2>
+              @if (deduplicatedStats().length > 1) {
+                <div class="season-tabs">
+                  @for (s of deduplicatedStats(); track s.season_id) {
+                    <button
+                      class="season-tab"
+                      [class.active]="selectedSeason()?.season_id === s.season_id"
+                      (click)="selectedSeasonId.set(s.season_id)"
+                    >{{ getSeasonLabel(s.season_id) }}</button>
+                  }
+                </div>
+              }
+            </div>
+
+            @if (selectedSeason()?.details?.length) {
+              <div class="stats-grid">
+                @for (detail of uniqueDetails(selectedSeason()!.details); track detail.type_id) {
+                  @if (detail.type?.name && detail.value.total !== null && detail.value.total !== undefined) {
+                    <div class="mini-stat">
+                      <span class="mini-stat-val">{{ statVal(detail.value.total) }}</span>
+                      <span class="mini-stat-label">{{ detail.type!.name }}</span>
+                    </div>
+                  }
+                }
+              </div>
+            } @else {
+              <p class="text-muted text-sm">No detailed stats for this season.</p>
+            }
+          </section>
+        }
+      }
+
+      <!-- ── Transfers ── -->
+      @if (activeTab() === 'transfers') {
+        @if (transfers().length === 0) {
+          <app-empty-state title="No transfer history" message="No transfers recorded for this player." />
+        } @else {
+          <section class="content-section">
+
+            <!-- Loan banner -->
+            @if (careerSummary()?.isCurrentlyOnLoan) {
+              <div class="loan-banner">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span>Currently on loan from <strong>{{ careerSummary()!.loanFrom }}</strong></span>
+              </div>
+            }
+
+            <!-- Career Summary Strip -->
+            <div class="career-summary">
+              <div class="summary-item">
+                <span class="summary-val">{{ careerSummary()!.clubCount }}</span>
+                <span class="summary-label">Clubs</span>
+              </div>
+              <div class="summary-divider"></div>
+              <div class="summary-item">
+                <span class="summary-val">{{ careerSummary()!.totalFees > 0 ? formatAmount(careerSummary()!.totalFees) : '–' }}</span>
+                <span class="summary-label">Total Fees</span>
+              </div>
+              <div class="summary-divider"></div>
+              <div class="summary-item">
+                <span class="summary-val">{{ careerSummary()!.biggestFee > 0 ? formatAmount(careerSummary()!.biggestFee) : '–' }}</span>
+                <span class="summary-label">Biggest Move</span>
+              </div>
+              <div class="summary-divider"></div>
+              <div class="summary-item">
+                <span class="summary-val">{{ careerSummary()!.firstYear }}</span>
+                <span class="summary-label">First Transfer</span>
+              </div>
+            </div>
+
+            <!-- Section header -->
+            <div class="section-header" style="margin-top: var(--space-8);">
+              <h2 class="section-title">Transfer History</h2>
+              <div class="transfer-legend">
+                <span class="legend-item"><span class="legend-dot legend-dot-perm"></span>Permanent</span>
+                <span class="legend-item"><span class="legend-dot legend-dot-loan"></span>Loan</span>
+              </div>
+            </div>
+
+            <!-- Transfer cards -->
+            <div class="transfer-cards">
+              @for (t of transferTimeline(); track t.id) {
+                <div class="tr-card card" [class.tr-current]="t.isCurrent" [class.tr-loan]="t.isLoan">
+
+                  <!-- Top row: date + badges -->
+                  <div class="tr-top">
+                    <span class="tr-date">{{ formatDate(t.date) }}</span>
+                    <div class="tr-badges">
+                      @if (t.isLoan) {
+                        <span class="tl-badge tl-badge-loan">Loan</span>
+                      } @else if (t.type) {
+                        <span class="tl-badge tl-badge-perm">{{ t.type }}</span>
+                      }
+                      @if (t.isCurrent) {
+                        <span class="tl-badge tl-badge-current">Current</span>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Club logos row — the visual hero -->
+                  <div class="tr-clubs">
+
+                    <!-- FROM -->
+                    <div class="tr-club tr-from">
+                      <div class="tr-crest-wrap" [class.tr-crest-muted]="true">
+                        @if (t.fromTeam?.logo) {
+                          <img [src]="t.fromTeam!.logo" [alt]="t.fromTeam!.name" class="tr-crest" (error)="onImgError($event)" />
+                        } @else {
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="tr-crest-icon"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                        }
+                      </div>
+                      <span class="tr-club-name tr-from-name">{{ t.fromTeam?.name ?? '—' }}</span>
+                    </div>
+
+                    <!-- Arrow -->
+                    <div class="tr-arrow-col" [class.tr-arrow-loan]="t.isLoan">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </div>
+
+                    <!-- TO -->
+                    <div class="tr-club tr-to">
+                      <div class="tr-crest-wrap" [class.tr-crest-active]="t.isCurrent">
+                        @if (t.toTeam?.logo) {
+                          <img [src]="t.toTeam!.logo" [alt]="t.toTeam!.name" class="tr-crest" (error)="onImgError($event)" />
+                        } @else {
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="tr-crest-icon"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                        }
+                      </div>
+                      <span class="tr-club-name" [class.tr-to-current]="t.isCurrent">{{ t.toTeam?.name ?? '—' }}</span>
+                    </div>
+
+                  </div>
+
+                  <!-- Bottom row: fee + duration -->
+                  <div class="tr-bottom">
+                    <span class="tr-fee">{{ t.amount ? formatAmount(t.amount) : 'Undisclosed' }}</span>
+                    @if (t.duration) {
+                      <span class="tr-duration">{{ t.duration }} at club</span>
+                    }
+                  </div>
+
+                </div>
+              }
+            </div>
+
+          </section>
+        }
+      }
+
+      <!-- ── Notes ── -->
+      @if (activeTab() === 'notes') {
+        <section class="content-section">
+          <div class="section-header">
+            <h2 class="section-title">Scouting Notes</h2>
+            <button class="btn btn-secondary btn-sm export-btn" (click)="exportPdf()" [disabled]="exportingPdf()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              {{ exportingPdf() ? 'Generating…' : 'Export PDF' }}
+            </button>
+          </div>
+
+          <div class="note-form card">
+            <form [formGroup]="noteForm" (ngSubmit)="submitNote()">
+              <textarea
+                formControlName="content"
+                class="form-input note-textarea"
+                placeholder="Write your observations about this player…"
+                rows="4"
+              ></textarea>
+              <button type="submit" class="btn btn-primary btn-sm note-submit" [disabled]="noteForm.invalid">
+                Save Note
+              </button>
+            </form>
+          </div>
+
+          @if (notesLoading()) {
+            <app-loading label="Loading notes" />
+          } @else if (playerNotes().length === 0) {
+            <app-empty-state title="No notes yet" message="Add your first scouting note above." />
+          } @else {
+            <div class="notes-list">
+              @for (note of playerNotes(); track note.id) {
+                <div class="note-card card">
+                  @if (editingNoteId() === note.id) {
+                    <form [formGroup]="editForm" (ngSubmit)="saveEdit(note)">
+                      <textarea formControlName="content" class="form-input note-textarea" rows="3"></textarea>
+                      <div class="note-edit-actions">
+                        <button type="submit" class="btn btn-primary btn-sm" [disabled]="editForm.invalid">Save</button>
+                        <button type="button" class="btn btn-ghost btn-sm" (click)="cancelEdit()">Cancel</button>
+                      </div>
+                    </form>
+                  } @else {
+                    <p class="note-content">{{ note.content }}</p>
+                    <div class="note-footer">
+                      <span class="text-muted text-sm">{{ formatDate(note.createdAt) }}</span>
+                      <div class="note-actions">
+                        <button class="btn btn-ghost btn-sm" (click)="startEdit(note)">Edit</button>
+                        <button class="btn btn-ghost btn-sm text-danger" (click)="deleteNote(note.id)">Delete</button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </section>
+      }
+
+    </div>
+
+    <!-- ── Similar Players ── -->
+    @if (similarLoading() || similarPlayers().length > 0) {
+      <div class="similar-section">
+        <div class="page-container">
+          <div class="section-header">
+            <h2 class="section-title">Similar Players</h2>
+          </div>
+          @if (similarLoading()) {
+            <app-loading label="Finding similar players…" />
+          } @else {
+            <div class="similar-grid">
+              @for (sp of similarPlayers(); track sp.id) {
+                <a [routerLink]="['/players', sp.id]" class="similar-card card card-hover">
+                  @if (sp.photo) {
+                    <img [src]="sp.photo" [alt]="sp.displayName || sp.name" class="similar-photo" (error)="onImgError($event)" />
+                  } @else {
+                    <div class="similar-photo-placeholder">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    </div>
+                  }
+                  <div class="similar-info">
+                    <p class="similar-name">{{ sp.displayName || sp.name }}</p>
+                    <p class="similar-meta">
+                      @if (sp.position?.name) { {{ sp.position!.name }} }
+                      @if (sp.position?.name && sp.nationality?.name) { · }
+                      {{ sp.nationality?.name }}
+                    </p>
+                  </div>
+                </a>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+  }
+</div>

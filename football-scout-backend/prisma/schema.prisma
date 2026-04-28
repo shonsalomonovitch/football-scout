@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  favoritePlayers   FavoritePlayer[]
+  favoriteTeams     FavoriteTeam[]
+  playerNotes       PlayerNote[]
+  comparisonHistory ComparisonHistory[]
+}
+
+model FavoritePlayer {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  apiPlayerId Int
+  playerName   String
+  displayName  String?
+  teamName     String?
+  photo        String?
+  position     String?
+  goals       Int?
+  rating      Decimal? @db.Decimal(3, 1)
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, apiPlayerId])
+}
+
+model FavoriteTeam {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  apiTeamId  Int
+  teamName   String
+  leagueName String?
+  logo       String?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, apiTeamId])
+}
+
+model PlayerNote {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  apiPlayerId Int
+  playerName  String
+  content     String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ComparisonHistory {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  player1Id   Int
+  player1Name String
+  player2Id   Int
+  player2Name String
+  season      Int
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

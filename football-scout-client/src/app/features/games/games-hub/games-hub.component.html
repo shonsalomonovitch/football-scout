@@ -1,0 +1,45 @@
+<div class="page-container">
+  <div class="page-section">
+    <div class="hub-header">
+      <h1 class="hub-title">🎮 Games</h1>
+      <p class="hub-sub">Test your football knowledge with daily challenges</p>
+    </div>
+    <div class="hub-grid">
+
+      <!-- Who Are Ya -->
+      <div class="game-card game-card-green card">
+        <div class="game-icon">🕵️</div>
+        <h2 class="game-title">Who Are Ya?</h2>
+        <p class="game-desc">A player photo is shown blurred. Guess who it is in 8 tries — each wrong guess reveals a little more.</p>
+        <div class="game-btn-row">
+          <a routerLink="/games/who-are-ya" [queryParams]="{mode:'daily'}" class="btn btn-primary game-btn-half">📅 Daily</a>
+          <a routerLink="/games/who-are-ya" [queryParams]="{mode:'random'}" class="btn game-btn-half game-btn-outline-green">🎲 Random</a>
+        </div>
+      </div>
+
+      <!-- Box2Box -->
+      <div class="game-card game-card-blue card">
+        <div class="game-icon">⚽</div>
+        <h2 class="game-title">Box2Box</h2>
+        <p class="game-desc">Fill a 3×3 grid — each cell needs a player matching both its row and column criteria. Beat the clock!</p>
+        <div class="game-btn-row">
+          <a routerLink="/games/box2box" [queryParams]="{mode:'daily'}" class="btn btn-primary game-btn-half">📅 Daily</a>
+          <a routerLink="/games/box2box" [queryParams]="{mode:'random'}" class="btn game-btn-half game-btn-outline-blue">🎲 Random</a>
+        </div>
+      </div>
+
+      <!-- Bingo -->
+      <div class="game-card game-card-amber card">
+        <div class="game-icon">🎯</div>
+        <h2 class="game-title">Football Bingo</h2>
+        <p class="game-desc">Players are revealed one by one. Assign each to a matching category on your 4×4 card to complete a line!</p>
+        <div class="game-btn-row">
+          <a routerLink="/games/bingo" [queryParams]="{mode:'daily'}" class="btn btn-primary game-btn-half">📅 Daily</a>
+          <a routerLink="/games/bingo" [queryParams]="{mode:'random'}" class="btn game-btn-half game-btn-outline-amber">🎲 Random</a>
+        </div>
+      </div>
+
+    </div>
+    <p class="hub-daily-note">All puzzles reset daily. Same puzzle for everyone each day.</p>
+  </div>
+</div>

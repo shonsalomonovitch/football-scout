@@ -1,0 +1,173 @@
+<div class="filter-toolbar">
+
+  <!-- ── Row 1: Search + Sort + Reset ── -->
+  <div class="filter-row filter-row--primary">
+
+    <div class="search-wrap" [class.dropdown-open]="dropdownOpen()">
+      <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Search players…"
+        [value]="filters().search"
+        (input)="onSearchInput($any($event.target).value)"
+        (keyup.enter)="onSearchEnter()"
+        autocomplete="off"
+        aria-label="Search players"
+      />
+      @if (suggestLoading()) {
+        <app-bouncing-dots size="xs" [dots]="2" class="input-spinner-dots" />
+      } @else if (filters().search) {
+        <button class="input-clear" (click)="clearSearch()" title="Clear search" aria-label="Clear search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      }
+
+      <!-- Autocomplete dropdown -->
+      @if (dropdownOpen() && filters().search.length >= 2) {
+        <div class="autocomplete-dropdown" role="listbox">
+          @if (suggestLoading()) {
+            <div class="ac-hint">
+              <app-bouncing-dots size="xs" [dots]="2" />
+              Searching…
+            </div>
+          } @else if (suggestions().length > 0) {
+            @for (p of suggestions(); track p.id) {
+              <button class="ac-option" role="option" (click)="selectSuggestion(p)">
+                @if (p.photo) {
+                  <img [src]="p.photo" [alt]="p.name" class="ac-photo" (error)="onImgError($event)" />
+                } @else {
+                  <div class="ac-photo-fallback" aria-hidden="true">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                  </div>
+                }
+                <div class="ac-info">
+                  <span class="ac-name">{{ p.displayName || p.name }}</span>
+                  <span class="ac-meta">
+                    @if (p.position?.name) { {{ p.position!.name }}  }
+                    {{ p.nationality?.name }}
+                  </span>
+                </div>
+                @if (calcAge(p.dateOfBirth)) {
+                  <span class="ac-age">{{ calcAge(p.dateOfBirth) }}</span>
+                }
+              </button>
+            }
+            <button class="ac-see-all" (click)="onSearchEnter()">
+              See all results for "{{ filters().search }}"
+            </button>
+          } @else {
+            <div class="ac-hint">No players found for "{{ filters().search }}"</div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="filter-row--right">
+      <div class="select-wrap">
+        <label class="select-label" for="sort-select">SORT</label>
+        <select
+          id="sort-select"
+          class="filter-select"
+          [value]="filters().sort"
+          (change)="onSortChange($any($event.target).value)"
+          aria-label="Sort players"
+        >
+          @for (opt of sortOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+        <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="m6 9 6 6 6-6"/>
+        </svg>
+      </div>
+
+      @if (isDirty()) {
+        <button class="btn-reset" (click)="reset()" title="Reset all filters" aria-label="Reset all filters">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+          Reset
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- ── Row 2: Categorical filters ── -->
+  <div class="filter-row filter-row--secondary">
+    <span class="filter-label">POSITION</span>
+    <div class="position-pills" role="group" aria-label="Filter by position">
+      @for (pos of positions; track pos) {
+        <button
+          class="pill"
+          [class.pill--active]="filters().position === pos"
+          (click)="setPosition(pos)"
+          [attr.aria-pressed]="filters().position === pos"
+        >{{ pos }}</button>
+      }
+    </div>
+
+    <div class="filter-row--divider" aria-hidden="true"></div>
+
+    <!-- League -->
+    <div class="select-wrap">
+      <label class="select-label" for="league-select">LEAGUE</label>
+      @if (leagueLoading()) {
+        <app-bouncing-dots size="xs" [dots]="2" />
+      } @else {
+        <select
+          id="league-select"
+          class="filter-select"
+          [value]="filters().leagueId ?? ''"
+          (change)="onLeagueChange($any($event.target).value)"
+          aria-label="Filter by league"
+        >
+          <option value="">All Leagues</option>
+          @for (l of leagues(); track l.id) {
+            <option [value]="l.id">{{ l.name }}</option>
+          }
+        </select>
+        <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="m6 9 6 6 6-6"/>
+        </svg>
+      }
+    </div>
+
+    <!-- Team -->
+    <div class="select-wrap">
+      <label class="select-label" for="team-select">TEAM</label>
+      @if (teamLoading()) {
+        <app-bouncing-dots size="xs" [dots]="2" />
+      } @else {
+        <select
+          id="team-select"
+          class="filter-select"
+          [value]="filters().teamId ?? ''"
+          (change)="onTeamChange($any($event.target).value)"
+          [disabled]="!filters().leagueId"
+          aria-label="Filter by team"
+        >
+          <option value="">{{ filters().leagueId ? 'All Teams' : 'Select league first' }}</option>
+          @for (t of teams(); track t.id) {
+            <option [value]="t.id">{{ t.name }}</option>
+          }
+        </select>
+        <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="m6 9 6 6 6-6"/>
+        </svg>
+      }
+    </div>
+  </div>
+
+</div>
+
+@if (dropdownOpen()) {
+  <div class="ac-backdrop" (click)="closeDropdown()" aria-hidden="true"></div>
+}

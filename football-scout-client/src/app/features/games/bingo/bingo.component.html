@@ -1,0 +1,126 @@
+<div class="bingo-page">
+
+  <div class="bingo-toprow">
+    <a routerLink="/games" class="bingo-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Games
+    </a>
+    <div class="bingo-mode-badge">
+      @if (mode() === 'daily') {
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Daily
+      } @else {
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        Random
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="bingo-loading">Loading today's card…</div>
+  } @else if (error()) {
+    <div class="bingo-loading">{{ error() }}</div>
+  } @else if (daily()) {
+
+    <!-- Result banners -->
+    @if (gameState() === 'won') {
+      <div class="bingo-banner bingo-banner-won">🎉 BINGO! You completed a line!</div>
+    } @else if (gameState() === 'out') {
+      <div class="bingo-banner bingo-banner-lost">No more players — {{ markedCells().size }}/16 filled</div>
+    }
+    @if (gameState() !== 'playing' && mode() === 'random') {
+      <button class="bingo-new-btn" (click)="loadRandom()">🎲 New Puzzle</button>
+    }
+
+    <!-- Player card -->
+    @if (currentPlayer() && gameState() === 'playing') {
+      <div class="bingo-player-card"
+           [class.bingo-card-correct]="lastResult() === 'correct'"
+           [class.bingo-card-wrong]="lastResult() === 'wrong' || wildcardNoMatch()">
+
+        <div class="bingo-card-main">
+          <!-- Number circle -->
+          <div class="bingo-num-circle">{{ currentPlayerIndex() + 1 }}</div>
+
+          <!-- Player photo -->
+          <div class="bingo-player-avatar">
+            @if (currentPlayer()!.photo) {
+              <img [src]="currentPlayer()!.photo" class="bingo-player-avatar-img" (error)="onImgError($event)" />
+            } @else {
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            }
+          </div>
+
+          <!-- Name -->
+          <div class="bingo-name-block">
+            <span class="bingo-first-name">{{ firstName(currentPlayer()!) }}</span>
+            <span class="bingo-last-name">{{ lastName(currentPlayer()!) }}</span>
+          </div>
+
+          <!-- Skip -->
+          <div class="bingo-skip-area">
+            <button class="bingo-skip-btn" (click)="skipPlayer()" [disabled]="busy()">
+              SKIP ▶
+            </button>
+            <span class="bingo-remaining">{{ remaining() }} REMAINING</span>
+          </div>
+        </div>
+
+        @if (validating()) { <div class="bingo-validating-bar"></div> }
+
+        <div class="bingo-wildcard-row">
+          <button class="bingo-wildcard-btn"
+                  (click)="useWildcard()"
+                  [disabled]="wildcardUsed() || busy()">
+            @if (wildcardNoMatch()) {
+              ⚡ No match found
+            } @else if (wildcardUsed()) {
+              ⚡ Wildcard Used
+            } @else {
+              ⚡ Play Wildcard
+            }
+          </button>
+          @if (!wildcardUsed()) {
+            <span class="bingo-wildcard-hint">Auto-places this player</span>
+          }
+        </div>
+
+      </div>
+    }
+
+    <!-- Stats bar -->
+    <div class="bingo-stats-bar">
+      <div class="bingo-stat-pill bingo-stat-success">✓ {{ successCount() }} Correct</div>
+      <div class="bingo-stat-pill bingo-stat-failed">✗ {{ failedCount() }} Failed</div>
+      <div class="bingo-stat-pill bingo-stat-skipped">⏭ {{ skippedCount() }} Skipped</div>
+    </div>
+
+    <!-- 4×4 Grid -->
+    <div class="bingo-grid-wrap">
+      <div class="bingo-grid">
+        @for (row of gridRows(); track $index) {
+          @for (cat of row; track cat.id) {
+            <div class="bingo-cell"
+                 [class.bingo-cell-marked]="isCellMarked(cat)"
+                 [class.bingo-cell-clickable]="gameState() === 'playing' && !isCellMarked(cat)"
+                 (click)="selectCategory(cat)">
+              @if (getCellPlayer(cat); as player) {
+                @if (player.photo) {
+                  <img [src]="player.photo" class="bingo-cell-photo" (error)="onImgError($event)" />
+                }
+                <span class="bingo-cell-label">{{ cat.label }}</span>
+                <span class="bingo-cell-player">{{ player.displayName }}</span>
+              } @else {
+                @if (cat.image) {
+                  <img [src]="cat.image" class="bingo-cell-icon" (error)="onImgError($event)" />
+                }
+                <span class="bingo-cell-label">{{ cat.label }}</span>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+  }
+</div>

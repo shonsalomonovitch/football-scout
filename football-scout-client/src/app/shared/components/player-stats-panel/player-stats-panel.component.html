@@ -1,0 +1,50 @@
+<div class="stats-panel">
+
+  <!-- KPI row -->
+  @if (kpis().length) {
+    <div class="kpi-row">
+      @for (k of kpis(); track k.label) {
+        <div class="kpi-cell">
+          <span class="kpi-value">{{ k.value }}</span>
+          <span class="kpi-label">{{ k.label }}</span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Bars -->
+  <div class="bars-grid">
+    <!-- Attacking -->
+    @if (attackingBars().length) {
+      <div class="bars-col">
+        <p class="col-heading">Attacking</p>
+        @for (bar of attackingBars(); track bar.label) {
+          <div class="bar-row">
+            <span class="bar-label">{{ bar.label }}</span>
+            <div class="bar-track">
+              <div class="bar-fill bar-attack" [style.width.%]="barPct(bar)"></div>
+            </div>
+            <span class="bar-val">{{ bar.value }}</span>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Defensive -->
+    @if (defensiveBars().length) {
+      <div class="bars-col">
+        <p class="col-heading">Defensive</p>
+        @for (bar of defensiveBars(); track bar.label) {
+          <div class="bar-row">
+            <span class="bar-label">{{ bar.label }}</span>
+            <div class="bar-track">
+              <div class="bar-fill bar-defend" [style.width.%]="barPct(bar)"></div>
+            </div>
+            <span class="bar-val">{{ bar.value }}</span>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+</div>

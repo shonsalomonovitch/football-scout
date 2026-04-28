@@ -1,0 +1,89 @@
+.filter-select { max-width: 160px; }
+
+.grouped-fixtures {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  margin-top: var(--space-6);
+}
+
+.fixture-group {}
+
+.group-label {
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.fixture-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.fixture-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-decoration: none;
+  cursor: pointer;
+  min-height: 48px;
+}
+
+.fix-time {
+  min-width: 160px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.fix-home {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.fix-away {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  justify-content: flex-start;
+}
+
+.fix-team-name {
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+}
+
+.team-logo-sm {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex-shrink: 0;
+  background: #fff;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.fix-score-wrap {
+  min-width: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fix-score {
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 640px) {
+  .fix-time { min-width: unset; font-size: var(--text-xs); }
+  .fix-team-name { font-size: var(--text-sm); }
+}

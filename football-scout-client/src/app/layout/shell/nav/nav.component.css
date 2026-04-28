@@ -1,0 +1,420 @@
+/* ══════════════════════════════════════════════════════
+   SIDEBAR — collapsible icon rail → expanding panel
+   ══════════════════════════════════════════════════════ */
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--sidebar-width, 60px);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  overflow: hidden;                        /* clips labels during expand */
+  transition: width 260ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 260ms ease;
+}
+
+.sidebar--open {
+  width: 220px;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.10);
+}
+
+/* ── Brand ── */
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  height: 56px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--color-border);
+  text-decoration: none;
+  transition: background 150ms ease;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebar-brand:hover { background: var(--color-surface-2); }
+
+.sidebar-brand-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--color-accent);
+  border-radius: var(--radius-md);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+/* Higher specificity (.sidebar-brand .sl-label) beats .sl-label alone */
+.sidebar-brand .sidebar-brand-text {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #ffffff 0%, #ffffff 55%, var(--color-accent) 55%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Icon column (always 60px, centres the icon) ── */
+.si-wrap {
+  min-width: 60px;
+  width: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;  /* for live pip */
+}
+
+.si {
+  flex-shrink: 0;
+}
+
+/* PNG icon images — dark mode: white icons; light mode: dark icons */
+.si-img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  /* Light mode default: make icons dark gray */
+  filter: brightness(0) opacity(0.4);
+  transition: filter 150ms ease, opacity 150ms ease;
+}
+
+.sidebar-link:hover .si-img {
+  filter: brightness(0) opacity(0.7);
+}
+
+.sidebar-link.active .si-img {
+  /* Active: use accent green tint */
+  filter: brightness(0) opacity(1) sepia(1) saturate(4) hue-rotate(95deg);
+}
+
+/* Dark mode: flip to white */
+:host-context([data-theme="dark"]) .si-img {
+  filter: brightness(0) invert(1) opacity(0.45);
+}
+
+:host-context([data-theme="dark"]) .sidebar-link:hover .si-img {
+  filter: brightness(0) invert(1) opacity(0.8);
+}
+
+:host-context([data-theme="dark"]) .sidebar-link.active .si-img {
+  filter: brightness(0) invert(1) opacity(1);
+}
+
+/* ── Shared label style ── */
+.sl-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 160ms ease;
+  overflow: hidden;
+  letter-spacing: 0.01em;
+}
+
+.sidebar--open .sl-label {
+  opacity: 1;
+  transition-delay: 80ms;
+}
+
+/* ── Nav section ── */
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-3) 0;
+  gap: 2px;
+}
+
+/* ── Sidebar link (shared by <a> and <button>) ── */
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  width: 100%;
+  color: var(--color-text-muted);
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: color 150ms ease, background 150ms ease;
+  text-decoration: none;
+  flex-shrink: 0;
+  outline: none;
+  white-space: nowrap;
+  overflow: hidden;
+  font-family: var(--font-family);
+}
+
+.sidebar-link:hover {
+  color: var(--color-text-primary);
+  background: var(--color-surface-2);
+}
+
+.sidebar-link:hover .sl-label {
+  color: var(--color-text-primary);
+}
+
+/* Active state */
+.sidebar-link.active {
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+.sidebar-link.active .sl-label {
+  color: var(--color-accent);
+}
+
+.sidebar-link.active .si {
+  color: var(--color-accent);
+}
+
+/* Danger variant */
+.sidebar-link-danger:hover {
+  color: var(--color-danger);
+  background: var(--color-danger-light);
+}
+
+/* Accent variant (register) */
+.sidebar-link-accent .sl-label {
+  color: var(--color-accent);
+}
+
+/* ── Live pip ── */
+.live-pip {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-danger);
+  animation: sidePulse 1.8s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes sidePulse {
+  0%, 100% { opacity: 1;    transform: scale(1); }
+  50%       { opacity: 0.3; transform: scale(0.85); }
+}
+
+/* ── Bottom section ── */
+.sidebar-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+/* ── User row ── */
+.sidebar-user-row {
+  cursor: default;
+}
+
+.sidebar-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  border: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent);
+}
+
+.sidebar-user-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  letter-spacing: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 130px;
+}
+
+/* ══════════════════════════════════════════════════════
+   MOBILE BOTTOM NAV
+   ══════════════════════════════════════════════════════ */
+
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: 56px;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.mobile-nav-link {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--color-text-muted);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-family);
+  transition: color 150ms ease;
+  position: relative;
+  outline: none;
+}
+
+.mobile-nav-link.active { color: var(--color-accent); }
+.mobile-nav-link:hover  { color: var(--color-text-primary); }
+
+.live-pip-sm {
+  position: absolute;
+  top: 8px;
+  right: calc(50% - 14px);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-danger);
+  animation: sidePulse 1.8s ease-in-out infinite;
+}
+
+/* ══════════════════════════════════════════════════════
+   MOBILE OVERLAY + DRAWER
+   ══════════════════════════════════════════════════════ */
+
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.mobile-drawer {
+  position: absolute;
+  bottom: 56px;
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.12);
+  padding: var(--space-2) 0;
+  animation: drawerUp 0.2s ease both;
+}
+
+@keyframes drawerUp {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.drawer-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 11px var(--space-6);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.drawer-link:hover  { color: var(--color-text-primary); background: var(--color-surface-2); }
+.drawer-link.active { color: var(--color-accent); }
+
+.drawer-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--space-2) 0;
+}
+
+.drawer-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 8px var(--space-6);
+  flex-wrap: wrap;
+}
+
+.drawer-theme-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 5px 10px;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: var(--font-family);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+.drawer-theme-btn:hover { color: var(--color-text-primary); border-color: var(--color-border-light); }
+
+.drawer-signout-btn {
+  padding: 5px 10px;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-muted);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: var(--font-family);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+.drawer-signout-btn:hover { color: var(--color-danger); border-color: var(--color-danger); }
+
+.drawer-link-inline {
+  padding: 5px 10px;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.drawer-link-accent { color: var(--color-accent); border-color: var(--color-accent); }
+
+/* ══════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .sidebar    { display: none; }
+  .mobile-nav { display: flex; }
+}

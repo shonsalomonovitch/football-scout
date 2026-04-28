@@ -1,0 +1,78 @@
+<div class="transfers-page">
+  <div class="page-hero">
+    <div class="page-container">
+      <h1 class="hero-title">Transfers</h1>
+      <p class="hero-subtitle">Latest player movements &amp; deals</p>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="toolbar sticky-toolbar">
+    <div class="page-container toolbar-inner">
+      <div class="date-filters">
+        <input type="date" class="form-input date-input" [ngModel]="fromDate()" (ngModelChange)="fromDate.set($event)" placeholder="From" />
+        <span class="date-sep">–</span>
+        <input type="date" class="form-input date-input" [ngModel]="toDate()" (ngModelChange)="toDate.set($event)" placeholder="To" />
+        <button class="btn btn-primary btn-sm" (click)="search()" [disabled]="!fromDate() || !toDate()">Filter</button>
+        <button class="btn btn-ghost btn-sm" (click)="loadLatest()">Latest</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-container page-body">
+    @if (loading()) {
+      <app-loading label="Loading transfers…" />
+    } @else if (error()) {
+      <div class="error-msg">{{ error() }}</div>
+    } @else if (!transfers().length) {
+      <app-empty-state title="No transfers found" message="Try adjusting the date range." />
+    } @else {
+      <div class="transfers-list">
+        @for (t of transfers(); track t.id) {
+          <div class="transfer-card">
+            <!-- Player -->
+            <div class="transfer-player">
+              <img [src]="t.player.photo" [alt]="t.player.name" class="player-avatar" (error)="onImgError($event)" />
+              <div>
+                <a [routerLink]="['/players', t.player.id]" class="player-name">{{ t.player.name }}</a>
+                <div class="transfer-date text-muted text-sm">{{ formatDate(t.date) }}</div>
+              </div>
+            </div>
+
+            <!-- Arrow flow -->
+            <div class="transfer-flow">
+              <div class="transfer-club">
+                @if (t.fromTeam) {
+                  <img [src]="t.fromTeam.logo" [alt]="t.fromTeam.name" class="club-logo" (error)="onImgError($event)" />
+                  <span>{{ t.fromTeam.name }}</span>
+                } @else {
+                  <span class="text-muted">–</span>
+                }
+              </div>
+              <span class="transfer-arrow">→</span>
+              <div class="transfer-club">
+                @if (t.toTeam) {
+                  <img [src]="t.toTeam.logo" [alt]="t.toTeam.name" class="club-logo" (error)="onImgError($event)" />
+                  <span>{{ t.toTeam.name }}</span>
+                } @else {
+                  <span class="text-muted">–</span>
+                }
+              </div>
+            </div>
+
+            <!-- Fee + type -->
+            <div class="transfer-meta">
+              <span class="transfer-fee">{{ formatAmount(t.amount) }}</span>
+              @if (t.type) {
+                <span class="badge badge-gray">{{ t.type }}</span>
+              }
+              @if (!t.completed) {
+                <span class="badge badge-yellow">Pending</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

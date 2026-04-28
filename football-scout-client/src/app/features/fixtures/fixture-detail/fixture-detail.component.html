@@ -1,0 +1,385 @@
+<div class="page-container">
+  <div class="page-section">
+
+    @if (loading()) {
+      <app-loading [full]="true" label="Loading fixture" />
+    } @else if (error()) {
+      <app-error-state [message]="error()" (retry)="loadFixture(fixtureId())" />
+    } @else if (fixture()) {
+
+      <!-- Match Hero Header -->
+      <div class="match-hero">
+        <div class="match-hero-body">
+
+          <!-- Home team -->
+          <div class="match-hero-team">
+            <div class="match-hero-logo-wrap">
+              <img [src]="fixture()!.teams.home?.logo" [alt]="fixture()!.teams.home?.name" class="match-hero-logo" (error)="onImgError($event)" />
+            </div>
+            <span class="match-hero-name" [class.match-winner]="fixture()!.teams.home?.winner === true">
+              {{ fixture()!.teams.home?.name }}
+            </span>
+          </div>
+
+          <!-- Center: score + minute + status + meta -->
+          <div class="match-hero-center">
+            <div class="match-hero-score">
+              @if (homeGoals(fixture()!) !== null) {
+                <span class="match-hero-goal">{{ homeGoals(fixture()!) }}</span>
+                <span class="match-hero-sep">–</span>
+                <span class="match-hero-goal">{{ awayGoals(fixture()!) }}</span>
+              } @else {
+                <span class="match-hero-vs">VS</span>
+              }
+            </div>
+
+            @if (isLiveFixture(fixture()!) && fixture()!.minute) {
+              <span class="match-hero-live-min">{{ fixture()!.minute }}'</span>
+            }
+
+            <span class="match-hero-status-badge" [ngClass]="statusBadgeClass(fixture()!.state?.short_name)">
+              {{ fixture()!.state?.name ?? fixture()!.state?.short_name ?? 'NS' }}
+            </span>
+
+            <div class="match-hero-meta">
+              @if (fixture()!.league?.name) {
+                <span class="match-hero-league">{{ fixture()!.league!.name }}</span>
+              }
+              @if (fixture()!.venue?.name) {
+                <span class="match-hero-venue">{{ fixture()!.venue!.name }}</span>
+              }
+              @if (fixture()!.startingAt) {
+                <span class="match-hero-venue">{{ formatDate(fixture()!.startingAt, fixture()!.startingAtTimestamp) }}</span>
+              }
+            </div>
+          </div>
+
+          <!-- Away team -->
+          <div class="match-hero-team">
+            <div class="match-hero-logo-wrap">
+              <img [src]="fixture()!.teams.away?.logo" [alt]="fixture()!.teams.away?.name" class="match-hero-logo" (error)="onImgError($event)" />
+            </div>
+            <span class="match-hero-name" [class.match-winner]="fixture()!.teams.away?.winner === true">
+              {{ fixture()!.teams.away?.name }}
+            </span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs-bar">
+        <button class="tab-btn" [class.active]="activeTab() === 'summary'" (click)="setTab('summary')">Summary</button>
+        <button class="tab-btn" [class.active]="activeTab() === 'lineups'" (click)="setTab('lineups')">Line-Ups</button>
+      </div>
+
+      <!-- ── SUMMARY TAB ── -->
+      @if (activeTab() === 'summary') {
+        <div class="summary-layout">
+
+          <!-- LEFT: Match Timeline -->
+          <div class="summary-left">
+            <div class="card timeline-card">
+
+              <!-- Top / All toggle -->
+              <div class="tl-toggle">
+                <button class="tl-toggle-btn" [class.active]="timelineFilter() === 'top'" (click)="timelineFilter.set('top')">Top</button>
+                <button class="tl-toggle-btn" [class.active]="timelineFilter() === 'all'" (click)="timelineFilter.set('all')">All</button>
+              </div>
+
+              @if (!fixture()!.events?.length) {
+                <app-empty-state title="No events available" />
+              } @else if (!timelineItems().length) {
+                <app-empty-state title="No key events" message="Switch to All to see all events." />
+              } @else {
+                <div class="timeline-body">
+                  @for (item of timelineItems(); track $index) {
+
+                    @if (item.kind === 'break') {
+                      <div class="tl-break">
+                        <span class="tl-break-label">{{ item.label }}</span>
+                      </div>
+
+                    } @else if (item.e) {
+                      <div class="tl-row">
+
+                        <!-- Home side -->
+                        <div class="tl-side tl-side--home">
+                          @if (item.e.teamId === fixture()!.teams.home?.id) {
+                            <div class="tl-player-info tl-player-info--home">
+                              @if (item.e.player?.name) {
+                                <span class="tl-player-name">{{ item.e.player!.name }}</span>
+                              }
+                              @if (item.e.type === 'substitution' && item.e.relatedPlayer) {
+                                <span class="tl-event-detail">↑ {{ item.e.relatedPlayer.name }}</span>
+                              }
+                              @if (item.e.result) { <span class="tl-event-detail">{{ item.e.result }}</span> }
+                            </div>
+                            <span class="tl-event-icon">
+                              @if (item.e.type === 'goal' || item.e.type === 'own_goal') {
+                                <img src="/football-ball.svg" class="ei-ball-icon" alt="goal" />
+                              } @else {
+                                <span [class]="eventIconClass(item.e.type)">{{ eventIcon(item.e.type) }}</span>
+                              }
+                            </span>
+                          }
+                        </div>
+
+                        <!-- Center: plain minute -->
+                        <div class="tl-center">
+                          <span class="tl-minute">{{ minuteLabel(item.e) }}</span>
+                        </div>
+
+                        <!-- Away side -->
+                        <div class="tl-side tl-side--away">
+                          @if (item.e.teamId === fixture()!.teams.away?.id) {
+                            <span class="tl-event-icon">
+                              @if (item.e.type === 'goal' || item.e.type === 'own_goal') {
+                                <img src="/football-ball.svg" class="ei-ball-icon" alt="goal" />
+                              } @else {
+                                <span [class]="eventIconClass(item.e.type)">{{ eventIcon(item.e.type) }}</span>
+                              }
+                            </span>
+                            <div class="tl-player-info">
+                              @if (item.e.player?.name) {
+                                <span class="tl-player-name">{{ item.e.player!.name }}</span>
+                              }
+                              @if (item.e.type === 'substitution' && item.e.relatedPlayer) {
+                                <span class="tl-event-detail">↑ {{ item.e.relatedPlayer.name }}</span>
+                              }
+                              @if (item.e.result) { <span class="tl-event-detail">{{ item.e.result }}</span> }
+                            </div>
+                          }
+                        </div>
+
+                      </div>
+                    }
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- RIGHT: Possession + Metrics + Player of Match -->
+          <div class="summary-right">
+
+            <!-- Match Possession -->
+            @if (possession()) {
+              <div class="card possession-card">
+                <p class="section-label possession-hd">Dominance Index</p>
+                <div class="possession-body">
+                  <div class="possession-ring-wrap">
+                    <svg class="possession-ring" viewBox="0 0 200 200">
+                      <!-- Background track ring -->
+                      <circle cx="100" cy="100" r="80" fill="none" class="possession-track" stroke-width="16" />
+                      <!-- Green arc -->
+                      <circle cx="100" cy="100" r="80" fill="none" stroke="#16a34a" stroke-width="16"
+                        stroke-linecap="round"
+                        [attr.stroke-dasharray]="possessionArc().dash + ' ' + possessionArc().total"
+                        transform="rotate(-90 100 100)" />
+                      <!-- Center background for text legibility -->
+                      <circle cx="100" cy="100" r="71" class="possession-center-bg" />
+                      <!-- Center % -->
+                      <text x="100" y="92" text-anchor="middle" class="possession-pct-text" dominant-baseline="middle">{{ possession()!.home }}%</text>
+                      <!-- DOMINANT label -->
+                      <text x="100" y="118" text-anchor="middle" class="possession-sub-text" dominant-baseline="middle">DOMINANT</text>
+                    </svg>
+                  </div>
+                  <div class="possession-labels">
+                    <div class="possession-label">
+                      <span class="possession-label-val">{{ possession()!.home }}%</span>
+                      <span class="possession-label-team possession-label-team--home">{{ fixture()!.teams.home?.name }}</span>
+                    </div>
+                    <div class="possession-label possession-label--away">
+                      <span class="possession-label-val">{{ possession()!.away }}%</span>
+                      <span class="possession-label-team possession-label-team--away">{{ fixture()!.teams.away?.name }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- Performance Metrics -->
+            @if (displayStats().length) {
+              <div class="card metrics-card">
+                <p class="metrics-hd">Performance Metrics</p>
+
+                <!-- Team column headers -->
+                <div class="metrics-teams-header">
+                  <div class="metrics-team-col">
+                    <img [src]="fixture()!.teams.home?.logo" [alt]="fixture()!.teams.home?.name" class="metrics-team-logo" (error)="onImgError($event)" />
+                    <span class="metrics-team-name">{{ fixture()!.teams.home?.name }}</span>
+                  </div>
+                  <div class="metrics-team-col metrics-team-col--away">
+                    <span class="metrics-team-name">{{ fixture()!.teams.away?.name }}</span>
+                    <img [src]="fixture()!.teams.away?.logo" [alt]="fixture()!.teams.away?.name" class="metrics-team-logo" (error)="onImgError($event)" />
+                  </div>
+                </div>
+
+                <div class="metrics-list">
+                  @for (s of displayStats(); track s.typeId) {
+                    <div class="metric-row">
+                      <div class="metric-vals">
+                        <span class="metric-num">{{ s.home }}</span>
+                        <span class="metric-type">{{ s.label }}</span>
+                        <span class="metric-num metric-num--away">{{ s.away }}</span>
+                      </div>
+                      <div class="metric-bar-track">
+                        <div class="metric-bar metric-bar--home"
+                             [class.metric-bar--gold]="s.color === 'gold'"
+                             [style.width.%]="statBarWidth(s.home, s.away)"></div>
+                        <div class="metric-bar metric-bar--away" [style.width.%]="statBarWidth(s.away, s.home)"></div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- Player of the Match -->
+            @if (fixture()!.playerOfMatch?.name) {
+              <div class="card potm-card">
+                <p class="potm-label">Player of the Match</p>
+                <div class="potm-body">
+                  <div class="potm-avatar">
+                    @if (fixture()!.playerOfMatch!.photo) {
+                      <img [src]="fixture()!.playerOfMatch!.photo" [alt]="fixture()!.playerOfMatch!.name" class="potm-photo" (error)="onImgError($event)" />
+                    } @else {
+                      <span class="potm-initials">{{ fixture()!.playerOfMatch!.name.split(' ').slice(-1)[0].slice(0,2).toUpperCase() }}</span>
+                    }
+                  </div>
+                  <span class="potm-name">{{ fixture()!.playerOfMatch!.name }}</span>
+                  @if (fixture()!.playerOfMatch!.rating) {
+                    <div class="potm-rating-wrap">
+                      <span class="potm-rating">{{ fixture()!.playerOfMatch!.rating!.toFixed(1) }}</span>
+                      <span class="potm-rating-label">Scout Rating</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- Score breakdown fallback -->
+            @if (!possession() && !performanceStats().length && fixture()!.scores?.length) {
+              <div class="card" style="margin-top: 0;">
+                <p class="section-label" style="margin-bottom: var(--space-3);">Score Breakdown</p>
+                <div class="stats-grid">
+                  @for (group of scoresByType(fixture()!); track group[0]) {
+                    <div class="stat-row">
+                      <span class="stat-label">{{ group[0] }}</span>
+                      <span class="stat-value">
+                        @for (s of group[1]; track s.participantId) {
+                          {{ s.participant }}: {{ s.goals }}
+                          @if (!$last) { &nbsp;|&nbsp; }
+                        }
+                      </span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+          </div>
+        </div>
+      }
+
+      <!-- ── LINEUPS TAB ── -->
+      @if (activeTab() === 'lineups') {
+
+        @if (lineupsLoading()) {
+          <div style="margin-top: var(--space-6);">
+            <app-loading [full]="true" label="Loading lineups" />
+          </div>
+        } @else if (lineups().length === 0) {
+          <div style="margin-top: var(--space-6);">
+            <app-empty-state title="Lineups not available" message="No lineup data found for this fixture." />
+          </div>
+        } @else {
+
+          <!-- Team toggle -->
+          <div class="lineup-team-toggle">
+            <button class="lineup-team-btn" [class.active]="selectedLineupTeam() === 'home'"
+                    (click)="selectedLineupTeam.set('home')">
+              <img [src]="fixture()!.teams.home?.logo" class="lineup-team-btn-logo" (error)="onImgError($event)" />
+              <span>{{ fixture()!.teams.home?.name }}</span>
+            </button>
+            <button class="lineup-team-btn" [class.active]="selectedLineupTeam() === 'away'"
+                    (click)="selectedLineupTeam.set('away')">
+              <img [src]="fixture()!.teams.away?.logo" class="lineup-team-btn-logo" (error)="onImgError($event)" />
+              <span>{{ fixture()!.teams.away?.name }}</span>
+            </button>
+          </div>
+
+          <!-- Single-team pitch -->
+          <div class="pitch-wrap">
+            <div class="pitch-area">
+              <div class="pitch">
+                <div class="pitch-markings">
+                  <div class="pitch-net-top"></div>
+                  <div class="pitch-net-bottom"></div>
+                  <div class="pitch-halfway"></div>
+                  <div class="pitch-center-circle"></div>
+                  <div class="pitch-center-dot"></div>
+                  <div class="pitch-penalty-top"></div>
+                  <div class="pitch-spot-top"></div>
+                  <div class="pitch-goal-top"></div>
+                  <div class="pitch-penalty-bottom"></div>
+                  <div class="pitch-spot-bottom"></div>
+                  <div class="pitch-goal-bottom"></div>
+                </div>
+
+                @for (row of selectedPitchRows(); track row.top) {
+                  <div class="pitch-row" [style.top.%]="row.top">
+                    @for (p of row.players; track p.playerId) {
+                      <a [routerLink]="['/players', p.playerId]" class="pitch-player">
+                        <div class="pitch-avatar-wrap">
+                          <div class="pitch-avatar">
+                            @if (p.photo) {
+                              <img [src]="p.photo" [alt]="p.name" class="pitch-avatar-img" (error)="onImgError($event)" />
+                            } @else {
+                              <span class="pitch-avatar-initials">{{ playerInitials(p) }}</span>
+                            }
+                          </div>
+                          @if (p.jerseyNumber) {
+                            <span class="pitch-jersey">{{ p.jerseyNumber }}</span>
+                          }
+                        </div>
+                        <span class="pitch-name">{{ pitchShortName(p.name) }}</span>
+                      </a>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Bench for selected team -->
+          @if (selectedLineup()?.bench?.length) {
+            <div class="card bench-card">
+              <div class="bench-header">
+                <img [src]="selectedLineupTeam() === 'home' ? fixture()!.teams.home?.logo : fixture()!.teams.away?.logo"
+                     class="bench-logo" (error)="onImgError($event)" />
+                <span class="section-label">Substitutes</span>
+              </div>
+              <div class="bench-list">
+                @for (p of selectedLineup()!.bench; track p.playerId) {
+                  <a [routerLink]="['/players', p.playerId]" class="bench-player">
+                    @if (p.photo) {
+                      <img [src]="p.photo" [alt]="p.name" class="bench-photo" (error)="onImgError($event)" />
+                    } @else {
+                      <span class="bench-initials">{{ playerInitials(p) }}</span>
+                    }
+                    <span class="bench-num text-muted">{{ p.jerseyNumber }}</span>
+                    <span class="bench-name">{{ p.name }}</span>
+                  </a>
+                }
+              </div>
+            </div>
+          }
+
+        }
+      }
+
+    }
+  </div>
+</div>

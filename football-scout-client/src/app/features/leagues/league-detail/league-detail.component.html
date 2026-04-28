@@ -1,0 +1,153 @@
+<div class="league-detail-page">
+
+  @if (loading()) {
+    <div class="page-container"><div class="page-section"><app-loading [full]="true" label="Loading league" /></div></div>
+  } @else if (error()) {
+    <div class="page-container"><div class="page-section"><app-error-state [message]="error()" (retry)="loadLeague(leagueId())" /></div></div>
+  } @else if (league()) {
+
+    <!-- Hero header -->
+    <div class="league-hero">
+      <div class="page-container hero-inner">
+        <div class="hero-back">
+          <a routerLink="/leagues" class="btn btn-ghost btn-sm">← Leagues</a>
+        </div>
+        <div class="league-identity">
+          @if (league()!.logo) {
+            <div class="league-logo-wrap">
+              <img [src]="league()!.logo" [alt]="league()!.name" class="league-logo" (error)="onImgError($event)" />
+            </div>
+          }
+          <div>
+            <div class="hero-meta">
+              @if (league()!.country?.flag) {
+                <img [src]="league()!.country!.flag" [alt]="league()!.country!.name" class="country-flag-sm" (error)="onImgError($event)" />
+              }
+              <span class="text-muted text-sm">{{ league()!.country?.name }}</span>
+              <span class="badge badge-gray text-sm">{{ league()!.type }}</span>
+              @if (league()!.active) {
+                <span class="badge badge-green">Active</span>
+              }
+            </div>
+            <h1 class="league-title">{{ league()!.name }}</h1>
+            @if (league()!.currentSeason) {
+              <p class="season-label">{{ league()!.currentSeason!.name }}</p>
+            }
+          </div>
+        </div>
+        @if (league()!.currentSeason) {
+          <a [routerLink]="['/teams']" [queryParams]="{ seasonId: league()!.currentSeason!.id, leagueId: league()!.id }" class="view-teams-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+            View Teams
+          </a>
+        }
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-bar page-container">
+      <button class="tab-btn" [class.active]="activeTab() === 'table'" (click)="setTab('table')">Standings</button>
+      <button class="tab-btn" [class.active]="activeTab() === 'topscorers'" (click)="setTab('topscorers')">Top Scorers</button>
+    </div>
+
+    <div class="page-container tab-content">
+
+      <!-- Standings Table -->
+      @if (activeTab() === 'table') {
+        @if (standingsLoading()) {
+          <app-loading [full]="true" label="Loading standings" />
+        } @else if (standings().length === 0) {
+          <app-empty-state title="No standings available" message="Standings data may not be available for this season." />
+        } @else {
+          <div class="table-wrap card">
+            <table class="data-table standings-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Club</th>
+                  <th class="num">MP</th>
+                  <th class="num">W</th>
+                  <th class="num">D</th>
+                  <th class="num">L</th>
+                  <th class="num hide-sm">GF</th>
+                  <th class="num hide-sm">GA</th>
+                  <th class="num">GD</th>
+                  <th class="num hide-md">Home</th>
+                  <th class="num hide-md">Away</th>
+                  <th class="num pts-col">PTS</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (entry of standings(); track entry.team.id; let i = $index) {
+                  <tr [class.top4]="i < 4" [class.relegation]="i >= standings().length - 3">
+                    <td>
+                      <span class="rank-badge" [class.rank-top]="i < 4" [class.rank-mid]="i >= 4 && i < standings().length - 3" [class.rank-rel]="i >= standings().length - 3">
+                        {{ entry.position }}
+                      </span>
+                    </td>
+                    <td>
+                      <a [routerLink]="['/teams', entry.team.id]" class="team-cell">
+                        <img [src]="entry.team.logo" [alt]="entry.team.name" class="team-logo-sm" (error)="onImgError($event)" />
+                        <span>{{ entry.team.name }}</span>
+                      </a>
+                    </td>
+                    <td class="num">{{ played(entry) }}</td>
+                    <td class="num text-accent">{{ getDetail(entry, 'OVERALL_WINS') }}</td>
+                    <td class="num">{{ getDetail(entry, 'OVERALL_DRAWS') }}</td>
+                    <td class="num text-danger">{{ getDetail(entry, 'OVERALL_LOST') }}</td>
+                    <td class="num hide-sm">{{ getDetail(entry, 'OVERALL_SCORED') }}</td>
+                    <td class="num hide-sm">{{ getDetail(entry, 'OVERALL_CONCEDED') }}</td>
+                    <td class="num" [class.gd-pos]="goalsDiff(entry) > 0" [class.gd-neg]="goalsDiff(entry) < 0">
+                      {{ goalsDiff(entry) > 0 ? '+' : '' }}{{ goalsDiff(entry) }}
+                    </td>
+                    <td class="num hide-md record-cell">{{ homeRecord(entry) }}</td>
+                    <td class="num hide-md record-cell">{{ awayRecord(entry) }}</td>
+                    <td class="num pts-col"><strong>{{ entry.points }}</strong></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+
+      <!-- Top Scorers -->
+      @if (activeTab() === 'topscorers') {
+        <div class="scorer-filters">
+          <button class="tab-btn scorer-tab" [class.active]="scorerFilter() === 'goals'" (click)="loadTopscorers('goals')">
+            <span class="scorer-tab-icon">⚽</span> Top Scorers
+          </button>
+          <button class="tab-btn scorer-tab" [class.active]="scorerFilter() === 'assists'" (click)="loadTopscorers('assists')">
+            <span class="scorer-tab-icon">🅰️</span> Top Assists
+          </button>
+          <button class="tab-btn scorer-tab" [class.active]="scorerFilter() === 'yellowcards'" (click)="loadTopscorers('yellowcards')">
+            <span class="scorer-tab-icon ycard">■</span> Yellow Cards
+          </button>
+          <button class="tab-btn scorer-tab" [class.active]="scorerFilter() === 'redcards'" (click)="loadTopscorers('redcards')">
+            <span class="scorer-tab-icon rcard">■</span> Red Cards
+          </button>
+        </div>
+        @if (scorerLoading()) {
+          <app-loading [full]="true" label="Loading stats" />
+        } @else if (topscorers().length === 0) {
+          <app-empty-state title="No data available" message="Data may not be available for this season." />
+        } @else {
+          <div class="topscorers-list card">
+            @for (ts of topscorers().slice(0, 25); track ts.id; let i = $index) {
+              <div class="scorer-row">
+                <span class="scorer-rank">{{ i + 1 }}</span>
+                <img [src]="ts.player.image_path" [alt]="ts.player.name" class="scorer-avatar" (error)="onImgError($event)" />
+                <div class="scorer-info">
+                  <a [routerLink]="['/players', ts.player.id]" class="scorer-name">{{ ts.player.display_name || ts.player.common_name || ts.player.name }}</a>
+                </div>
+                <span class="scorer-total">{{ ts.total }}</span>
+              </div>
+            }
+          </div>
+        }
+      }
+
+    </div>
+
+  }
+</div>

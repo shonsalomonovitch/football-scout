@@ -1,0 +1,239 @@
+.league-detail-page { min-height: 100vh; }
+
+/* ── League Hero ── */
+.league-hero {
+  background: linear-gradient(160deg, #f0fdf4 0%, #ffffff 40%, #f8fafc 100%);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-8) 0;
+}
+:host-context([data-theme="dark"]) .league-hero {
+  background: linear-gradient(135deg, #0d1117 0%, #111827 60%, #0d1f33 100%);
+}
+
+.hero-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.hero-back { margin-bottom: var(--space-2); }
+
+.league-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.league-logo-wrap {
+  width: 72px;
+  height: 72px;
+  background: #fff;
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: var(--space-2);
+}
+
+.league-logo { width: 56px; height: 56px; object-fit: contain; }
+
+.hero-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.country-flag-sm { width: 20px; height: 14px; object-fit: cover; border-radius: 2px; }
+
+.league-title {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-extrabold);
+  letter-spacing: -0.03em;
+  color: var(--color-text-primary);
+}
+
+.view-teams-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+  border: 1px solid var(--color-accent-dim);
+  border-radius: var(--radius-full);
+  text-decoration: none;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+.view-teams-btn:hover {
+  background: var(--color-accent-dim);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+
+.season-label {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--space-1);
+}
+
+/* ── Tabs Bar ── */
+.tabs-bar {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+  padding-top: var(--space-4);
+}
+
+.tab-content { padding: var(--space-6) 0; }
+
+/* ── Standings ── */
+.table-wrap { overflow-x: auto; padding: 0; }
+
+.standings-table .rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+}
+
+.rank-top { background: rgba(34,197,94,0.15); color: #4ade80; }
+.rank-mid { background: transparent; color: var(--color-text-muted); }
+.rank-rel { background: rgba(239,68,68,0.12); color: #f87171; }
+
+.team-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-decoration: none;
+  color: var(--color-text-primary);
+  font-weight: var(--font-medium);
+  transition: color var(--transition-fast);
+}
+
+.team-cell:hover { color: var(--color-accent-hover); }
+
+.team-logo-sm {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex-shrink: 0;
+  background: #fff;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.pts-col { font-weight: var(--font-bold); color: var(--color-text-primary); }
+.text-accent { color: var(--color-accent-hover); }
+.text-danger  { color: #f87171; }
+.gd-pos { color: #4ade80; }
+.gd-neg { color: #f87171; }
+
+.record-cell {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .hide-md { display: none; }
+}
+
+@media (max-width: 640px) {
+  .hide-sm { display: none; }
+}
+
+/* ── Topscorers ── */
+.scorer-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.scorer-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.scorer-tab-icon {
+  font-size: var(--text-sm);
+  line-height: 1;
+}
+
+.scorer-tab-icon.ycard { color: #b9f500; }
+.scorer-tab-icon.rcard { color: #ef4444; }
+
+.topscorers-list { padding: 0; }
+
+.scorer-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  transition: background var(--transition-fast);
+}
+
+.scorer-row:last-child { border-bottom: none; }
+.scorer-row:hover { background: var(--color-surface-2); }
+
+.scorer-rank {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--color-text-muted);
+  min-width: 24px;
+  text-align: center;
+}
+
+.scorer-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--color-surface-2);
+  flex-shrink: 0;
+}
+
+.scorer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.scorer-name {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.scorer-name:hover { color: var(--color-accent-hover); }
+
+.scorer-team { display: block; }
+
+.scorer-total {
+  font-size: var(--text-xl);
+  font-weight: var(--font-extrabold);
+  color: var(--color-accent-hover);
+  min-width: 40px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

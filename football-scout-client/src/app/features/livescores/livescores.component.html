@@ -1,0 +1,96 @@
+<div class="livescores-page">
+  <!-- Header -->
+  <div class="page-hero">
+    <div class="page-container">
+      <div class="hero-content">
+        <div class="live-dot-wrap">
+          <span class="live-dot"></span>
+          <span class="hero-label">LIVE</span>
+        </div>
+        <h1 class="hero-title">Live Scores</h1>
+        <p class="hero-subtitle">Real-time match updates, scores &amp; events</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar sticky-toolbar">
+    <div class="page-container toolbar-inner">
+      <div class="tabs-inline">
+        <button class="tab-pill" [class.active]="mode() === 'all'" (click)="setMode('all')">All Matches</button>
+        <button class="tab-pill" [class.active]="mode() === 'inplay'" (click)="setMode('inplay')">
+          <span class="dot-live"></span> In Play
+        </button>
+      </div>
+      <div class="toolbar-right">
+        <span class="poll-badge">Auto-refreshes every 12s</span>
+        <button class="refresh-btn" (click)="manualRefresh()" [disabled]="loading() || refreshing()" [class.spinning]="refreshing()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 2v6h-6"/>
+            <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+            <path d="M3 22v-6h6"/>
+            <path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+          </svg>
+          {{ refreshing() ? 'Refreshing…' : 'Refresh' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-container page-body">
+    @if (loading()) {
+      <app-loading label="Loading livescores…" />
+    } @else if (error()) {
+      <div class="error-msg">{{ error() }}</div>
+    } @else if (!matches().length) {
+      <app-empty-state title="No matches right now" message="Check back during match hours for live updates." />
+    } @else {
+      <div class="matches-groups" [@groupsEnter]="groupedMatches().length">
+        @for (group of groupedMatches(); track group[0].leagueId) {
+          <div class="league-group" @matchEnter>
+            <div class="league-group-header">
+              <span class="league-group-name">{{ group[0].leagueName || 'League ' + group[0].leagueId }}</span>
+              <span class="badge badge-gray">{{ group.length }} match{{ group.length !== 1 ? 'es' : '' }}</span>
+            </div>
+
+            @for (match of group; track match.id) {
+              <a [routerLink]="['/fixtures', match.id]" class="match-card" [class.is-live]="isLive(match)">
+                <!-- State -->
+                <div class="match-state">
+                  <span class="state-badge" [ngClass]="stateClass(match)">
+                    {{ match.state?.short_name }}
+                  </span>
+                </div>
+
+                <!-- Teams -->
+                <div class="match-teams">
+                  <!-- Home: name left, logo right (logo nearest to score) -->
+                  <div class="match-team match-team-home">
+                    <span class="team-name" [class.winner]="match.teams.home.winner === true">{{ match.teams.home.name }}</span>
+                    <img [src]="match.teams.home.logo" [alt]="match.teams.home.name" class="team-logo" (error)="onImgError($event)" />
+                  </div>
+                  <div class="match-score">
+                    @if (match.state?.short_name !== 'NS') {
+                      <span class="score-val">{{ match.score.home }} – {{ match.score.away }}</span>
+                      @if (match.minute) {
+                        <span class="minute-chip">{{ match.minute }}'</span>
+                      }
+                    } @else {
+                      <span class="score-ko">{{ formatKO(match) }}</span>
+                    }
+                  </div>
+                  <!-- Away: logo left (nearest to score), name right -->
+                  <div class="match-team match-team-away">
+                    <img [src]="match.teams.away.logo" [alt]="match.teams.away.name" class="team-logo" (error)="onImgError($event)" />
+                    <span class="team-name" [class.winner]="match.teams.away.winner === true">{{ match.teams.away.name }}</span>
+                  </div>
+                </div>
+
+              </a>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
